@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-var GRID_SIZE = 20;
-var BORDER_SIZE = 0;
+const GRID_SIZE = 20;
+const BORDER_SIZE = 0;
 
 var components = [];
 
@@ -23,19 +23,41 @@ var components = [];
 var g_mouseX;
 var g_mouseY;
 
-// ======================= Classes =====================
+// States
+const MODES = {
+    Drawing: 0,
+    Editing: 1,
+    Viewing: 2
+}
+var g_currentMode = MODES.Drawing;
+
+// Components
+const COMPONENTS = {
+    Wire: 0,
+    Resistor: 1
+}
+var g_drawingComp = COMPONENTS.Resistor;
+
+// slot for temperary component during creation
+var g_currentComponent;
+
+// ====================[ APPARENTLY JS HAS CLASSES NOW ]====================
 class SinglePort {
     constructor(x, y) {
         this.x1 = x;
         this.y1 = y;
         this.x2 = 0;
         this.y2 = 0;
-        this.built =  false;
+        this.built = false;
     }
 
     draw() {
-        if (this.built) line(this.x1, this.y1, this.x2, this.y2);
-        else line(this.x1, this.y1, g_mouseX, g_mouseY);
+        if (this.built) this.drawComponent(this.x1, this.y1, this.x2, this.y2);
+        else this.drawComponent(this.x1, this.y1, g_mouseX, g_mouseY);
+    }
+
+    drawComponent(x1, y1, x2, y2) {
+        line(x1, y1, x2, y2);
     }
 
     setEnd(x, y) {
@@ -44,6 +66,64 @@ class SinglePort {
         this.built = true;
     }
 }
+
+class Wire extends SinglePort { };
+class Resistor extends SinglePort {
+    constructor(x, y) {
+        super(x, y);
+        this.resistance = 100;
+    }
+
+    set setResistance(r) {
+        this.resistance = r;
+    }
+
+    drawComponent(x1, y1, x2, y2) { // TODO: pushing the matrix from the get go will make the intiail calc less cumbersome
+        var p1 = createVector(x1, y1);
+        var p2 = createVector(x2, y2);
+        var v = p5.Vector.sub(p2, p1);
+        var mid = p5.Vector.add(p1, p5.Vector.mult(v, 0.5));
+
+        var vn = p5.Vector.div(v, v.mag()).mult(GRID_SIZE);
+        var start = p5.Vector.sub(mid, vn);
+        var end = p5.Vector.add(mid, vn);
+
+        line(x1, y1, start.x, start.y);
+        line(x2, y2, end.x, end.y);
+
+        // draw resistor symbol
+        push();
+        translate(start.x, start.y);
+        text(this.resistance, 10, -10);
+        rotate(vn.heading());
+        var step = GRID_SIZE / 3;
+        beginShape(LINES);
+        vertex(0, 0);               // head
+        vertex(0.5 * step, 10);
+        for (var i = 0, pos = true; i <= 4; i++, pos = !pos) {
+            vertex((0.5 + i) * step, pos ? 10 : -10);
+            vertex((1.5 + i) * step, pos ? -10 : 10);
+        }
+        vertex(5.5 * step, -10);    // tail
+        vertex(GRID_SIZE * 2, 0);
+        endShape();
+        pop();
+    }
+};
+class Capacitor extends SinglePort { };
+class Inductor extends SinglePort { };
+class Diode extends SinglePort { };
+class VSource extends SinglePort { };
+class ISource extends SinglePort { };
+
+// TODO: Add all common single port items:
+// Resistors, capacitors, inductors, diodes, LEDs, zener diodes, VSources, ISources
+
+// TODO: Add single connection components:
+// V Source, Ground
+
+// TODO: Add interactive components
+// Switches, potentiometers
 
 function setup() {
     canvas = createCanvas(windowWidth, windowHeight);
@@ -65,6 +145,13 @@ function draw() {
     for (var i = 0; i < components.length; i++) {
         components[i].draw();
     }
+
+    // draw current component (if drawing)
+    if (g_currentComponent != undefined) {
+        g_currentComponent.draw();
+    }
+
+    console.log(components.length);
 }
 
 function drawGrid() {
@@ -81,12 +168,33 @@ function drawCursor() {
 }
 
 function mousePressed() {
-    components.push(new SinglePort(g_mouseX, g_mouseY));
+    if (g_currentMode != MODES.Drawing) return;
+
+    if (g_currentComponent != undefined) {
+        // there is already something, finish it
+        finishComponent();
+    } else {
+        switch(g_drawingComp) {
+        case COMPONENTS.Wire: 
+            g_currentComponent = new Wire(g_mouseX, g_mouseY);
+            break;
+        case COMPONENTS.Resistor:
+            g_currentComponent = new Resistor(g_mouseX, g_mouseY);
+            break;
+        }
+    }
 }
 
 function mouseReleased() {
+    finishComponent();
+}
+
+function finishComponent() {
+    if ((g_currentComponent === undefined) ||
+        (g_currentComponent.x1 == g_mouseX && g_currentComponent.y1 == g_mouseY)) return;
+
     // don't add to component if mouse position didn't change
-    // var prevComponent = components[components.length - 1];
-    // if (prevComponent.x1 != g_mouseX)
-    components[components.length - 1].setEnd(g_mouseX, g_mouseY);
+    g_currentComponent.setEnd(g_mouseX, g_mouseY);
+    components.push(g_currentComponent);
+    g_currentComponent = undefined;
 }
