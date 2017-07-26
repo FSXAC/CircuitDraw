@@ -35,9 +35,13 @@ var g_currentMode = MODES.Drawing;
 const COMPONENTS = {
     Wire: 0,
     Resistor: 1,
-    Capacitor: 2
+    Capacitor: 2,
+    Inductor: 3,
+    Diode: 4,
+    VSource: 5,
+    ISource: 6,
 }
-var g_drawingComp = COMPONENTS.Capacitor;
+var g_drawingComp = COMPONENTS.Diode;
 
 // slot for temperary component during creation
 var g_currentComponent;
@@ -50,7 +54,7 @@ class SinglePort {
         this.x2 = 0;
         this.y2 = 0;
         this.built = false;
-        this.symbolSize = 5;
+        this.size = 5;
     }
 
     draw() {
@@ -95,16 +99,16 @@ class Resistor extends SinglePort {
 
         push();
         translate(m1, 0);
-        textRotated(this.resistance, this.symbolSize, -GRID_SIZE / 2, -1.0 * v.heading())
+        textRotated(this.resistance, this.size, -GRID_SIZE / 2, -1.0 * v.heading())
 
         beginShape(LINES);
         vertex(0, 0);
-        vertex(0.5 * step, this.symbolSize);
+        vertex(0.5 * step, this.size);
         for (var i = 0, pos = true; i <= 4; i++, pos = !pos) {
-            vertex((0.5 + i) * step, pos ? this.symbolSize : -this.symbolSize);
-            vertex((1.5 + i) * step, pos ? -this.symbolSize : this.symbolSize);
+            vertex((0.5 + i) * step, pos ? this.size : -this.size);
+            vertex((1.5 + i) * step, pos ? -this.size : this.size);
         }
-        vertex(5.5 * step, -this.symbolSize);
+        vertex(5.5 * step, -this.size);
         vertex(GRID_SIZE * 2, 0);
         endShape();
 
@@ -132,18 +136,46 @@ class Capacitor extends SinglePort {
         translate(x1, y1);
         rotate(v.heading());
 
-        textRotated(this.capacitance, m1 + this.symbolSize, -GRID_SIZE / 2, -1.0 * v.heading())
+        textRotated(this.capacitance, m1 + this.size, -GRID_SIZE / 2, -1.0 * v.heading())
 
         line(m2, 0, v.mag(), 0);
         line(0, 0, m1, 0);
-        line(m1, -this.symbolSize, m1, this.symbolSize);
-        line(m2, -this.symbolSize, m2, this.symbolSize);
+        line(m1, -this.size, m1, this.size);
+        line(m2, -this.size, m2, this.size);
 
         pop();
     }
 };
-class Inductor extends SinglePort { };
-class Diode extends SinglePort { };
+class Inductor extends SinglePort {
+    // TODO: not yet implemented
+};
+class Diode extends SinglePort {
+    constructor (x, y) {
+        super(x, y);
+        this.v_d    // voltage across diode
+        this.v_t    // thermal voltage
+        this.i_rs   // reverse saturation current
+    }
+
+    drawComponent(x1, y1, x2, y2) {
+        var v = createVector(x2 - x1, y2 - y1);
+        var m = v.mag() / 2;
+
+        line(x1, y1, x2, y2);
+
+        push();
+        translate(x1, y1);
+        rotate(v.heading());
+        beginShape(TRIANGLES);
+        fill(0);
+        vertex(m - this.size, this.size);
+        vertex(m - this.size, -this.size);
+        vertex(m + this.size, 0);
+        endShape();
+        line(m + this.size, this.size, m + this.size, -this.size);
+        pop();
+    }
+};
 class VSource extends SinglePort { };
 class ISource extends SinglePort { };
 
@@ -217,6 +249,18 @@ function mousePressed() {
             break;
         case COMPONENTS.Capacitor: 
             g_currentComponent = new Capacitor(g_mouseX, g_mouseY);
+            break;
+        case COMPONENTS.Inductor:
+            g_currentComponent = new Inductor(g_mouseX, g_mouseY);
+            break;
+        case COMPONENTS.Diode:
+            g_currentComponent = new Diode(g_mouseX, g_mouseY);
+            break;
+        case COMPONENTS.VSource:
+            g_currentComponent = new VSource(g_mouseX, g_mouseY);
+            break;
+        case COMPONENTS.ISource:
+            g_currentComponent = new ISource(g_mouseX, g_mouseY);
             break;
         }
     }
