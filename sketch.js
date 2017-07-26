@@ -126,8 +126,9 @@ class ISource extends SinglePort { };
 // Switches, potentiometers
 
 function setup() {
-    canvas = createCanvas(windowWidth, windowHeight);
-    canvas.position(0, 0);
+    canvas = createCanvas(windowWidth, windowHeight - 100);
+    canvas.position(0, 100);
+    canvas.style("z-index", "-1")
 }
 
 function draw() {
@@ -164,11 +165,15 @@ function drawGrid() {
 }
 
 function drawCursor() {
-    ellipse(g_mouseX, g_mouseY, 5, 5 );
+    ellipse(g_mouseX, g_mouseY, 5, 5);
 }
 
 function mousePressed() {
+    // if not drawing: return (not doing anything at the moment)
     if (g_currentMode != MODES.Drawing) return;
+
+    // if mouse is outside of canvas, don't do anything
+    if (g_mouseX < 0 || g_mouseY < 0 || g_mouseX > width || g_mouseY > height) return;
 
     if (g_currentComponent != undefined) {
         // there is already something, finish it
