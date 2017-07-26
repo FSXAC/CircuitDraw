@@ -41,7 +41,7 @@ const COMPONENTS = {
     VSource: 5,
     ISource: 6,
 }
-var g_drawingComp = COMPONENTS.Diode;
+var g_drawingComp = COMPONENTS.Wire;
 
 // slot for temperary component during creation
 var g_currentComponent;
@@ -204,6 +204,7 @@ function draw() {
     // draw UI
     drawCursor();
     drawGrid();
+    drawHUD();
 
     // draw components
     for (var i = 0; i < components.length; i++) {
@@ -227,6 +228,22 @@ function drawGrid() {
 
 function drawCursor() {
     ellipse(g_mouseX, g_mouseY, 5, 5);
+}
+
+function drawHUD() {
+    var drawText;
+
+    switch(g_drawingComp) {
+    case COMPONENTS.Wire: drawText = "Wire";  break;
+    case COMPONENTS.Resistor: drawText = "Resistor"; break;
+    case COMPONENTS.Capacitor: drawText = "Capacitor";  break;
+    case COMPONENTS.Inductor: drawText = "Inductor"; break;
+    case COMPONENTS.Diode: drawText = "Diode"; break;
+    case COMPONENTS.VSource: drawText = "V-Source"; break;
+    case COMPONENTS.ISource: drawText = "I-Source"; break;
+    }
+    textSize(20);
+    text("Drawing " + drawText, 10, 30);
 }
 
 function mousePressed() {
@@ -266,6 +283,18 @@ function mousePressed() {
     }
 }
 
+function mouseReleased() {
+    finishComponent();
+}
+
+function mouseWheel(event) {
+    if (event.delta > 0) {
+        if (g_drawingComp < 6) g_drawingComp++;
+    } else {
+        if (g_drawingComp > 0) g_drawingComp--;
+    }
+}   
+
 function textRotated(string, x, y, rotation) {
     // Draws a rotated text
     push();
@@ -273,10 +302,6 @@ function textRotated(string, x, y, rotation) {
     rotate(rotation);
     text(string, 0, 0);
     pop();
-}
-
-function mouseReleased() {
-    finishComponent();
 }
 
 function finishComponent() {
