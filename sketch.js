@@ -72,6 +72,7 @@ class Resistor extends SinglePort {
     constructor(x, y) {
         super(x, y);
         this.resistance = 100;
+        this.symbolHeight = 5;
     }
 
     set setResistance(r) {
@@ -93,16 +94,16 @@ class Resistor extends SinglePort {
 
         push();
         translate(m1, 0);
-        textRotated(this.resistance, 10, -GRID_SIZE / 2, -1.0 * v.heading())
+        textRotated(this.resistance, this.symbolHeight, -GRID_SIZE / 2, -1.0 * v.heading())
 
         beginShape(LINES);
         vertex(0, 0);
-        vertex(0.5 * step, 10);
+        vertex(0.5 * step, this.symbolHeight);
         for (var i = 0, pos = true; i <= 4; i++, pos = !pos) {
-            vertex((0.5 + i) * step, pos ? 10 : -10);
-            vertex((1.5 + i) * step, pos ? -10 : 10);
+            vertex((0.5 + i) * step, pos ? this.symbolHeight : -this.symbolHeight);
+            vertex((1.5 + i) * step, pos ? -this.symbolHeight : this.symbolHeight);
         }
-        vertex(5.5 * step, -10);
+        vertex(5.5 * step, -this.symbolHeight);
         vertex(GRID_SIZE * 2, 0);
         endShape();
 
