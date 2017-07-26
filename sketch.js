@@ -17,7 +17,11 @@
 var GRID_SIZE = 20;
 var BORDER_SIZE = 0;
 
-var lines = [];
+var components = [];
+
+// Snapped mouse position
+var g_mouseX;
+var g_mouseY;
 
 // ======================= Classes =====================
 class SinglePort {
@@ -31,12 +35,7 @@ class SinglePort {
 
     draw() {
         if (this.built) line(this.x1, this.y1, this.x2, this.y2);
-        else line(
-            this.x1,
-            this.y1,
-            round(mouseX / GRID_SIZE) * GRID_SIZE,
-            round(mouseY / GRID_SIZE) * GRID_SIZE
-        )
+        else line(this.x1, this.y1, g_mouseX, g_mouseY);
     }
 
     setEnd(x, y) {
@@ -54,11 +53,17 @@ function setup() {
 function draw() {
     background(255);
 
+    // update snapping position
+    g_mouseX = round(mouseX / GRID_SIZE) * GRID_SIZE;
+    g_mouseY = round(mouseY / GRID_SIZE) * GRID_SIZE;
+
+    // draw UI
     drawCursor();
     drawGrid();
 
-    for (var i = 0; i < lines.length; i++) {
-        lines[i].draw();
+    // draw components
+    for (var i = 0; i < components.length; i++) {
+        components[i].draw();
     }
 }
 
@@ -72,24 +77,16 @@ function drawGrid() {
 }
 
 function drawCursor() {
-    ellipse(
-        round(mouseX / GRID_SIZE) * GRID_SIZE, 
-        round(mouseY / GRID_SIZE) * GRID_SIZE, 
-        5, 
-        5
-    );
+    ellipse(g_mouseX, g_mouseY, 5, 5 );
 }
 
 function mousePressed() {
-    lines.push(new SinglePort(
-        round(mouseX / GRID_SIZE) * GRID_SIZE, 
-        round(mouseY / GRID_SIZE) * GRID_SIZE
-    ));
+    components.push(new SinglePort(g_mouseX, g_mouseY));
 }
 
 function mouseReleased() {
-    lines[lines.length - 1].setEnd(
-        round(mouseX / GRID_SIZE) * GRID_SIZE, 
-        round(mouseY / GRID_SIZE) * GRID_SIZE
-    );
+    // don't add to component if mouse position didn't change
+    // var prevComponent = components[components.length - 1];
+    // if (prevComponent.x1 != g_mouseX)
+    components[components.length - 1].setEnd(g_mouseX, g_mouseY);
 }
