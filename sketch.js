@@ -75,7 +75,18 @@ class SinglePort {
     }
 }
 
-class Wire extends SinglePort { };
+class Wire extends SinglePort {
+    constructor(x, y) {
+        super(x, y);
+        this.color = color(0, 0, 150);
+    }
+
+    drawComponent(x1, y1, x2, y2) {
+        stroke(this.color);
+        line(x1, y1, x2, y2);
+        stroke(0);
+    }
+};
 class Resistor extends SinglePort {
     constructor(x, y) {
         super(x, y);
@@ -142,12 +153,9 @@ class Capacitor extends SinglePort {
         push();
         translate(x1, y1);
         rotate(v.heading());
-
         textRotated(this.capacitance, m1 + this.size, -GRID_SIZE / 2, -1.0 * v.heading())
-
         line(m1, -this.size, m1, this.size);
         line(m2, -this.size, m2, this.size);
-
         pop();
     }
 };
