@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+const WEB_TOP_MARGIN = 70;
+
 const GRID_SIZE = 20;
 const BORDER_SIZE = 0;
 
@@ -54,7 +56,7 @@ class SinglePort {
         this.x2 = 0;
         this.y2 = 0;
         this.built = false;
-        this.size = 5;
+        this.size = 10;
     }
 
     draw() {
@@ -86,16 +88,17 @@ class Resistor extends SinglePort {
 
     drawComponent(x1, y1, x2, y2) {
         var v = createVector(x2 - x1, y2 - y1);
+        var vn = v.copy().normalize(v);
         var m1 = v.mag() / 2 - GRID_SIZE;
         var m2 = v.mag() / 2 + GRID_SIZE;
         var step = (m2 - m1) / 6;
 
+        line(x1, y1, x1 + vn.x * m1, y1 + vn.y * m1);
+        line(x2, y2, x2 - vn.x * m1, y2 - vn.y * m1);
+
         push();
         translate(x1, y1);
         rotate(v.heading());
-
-        line(m2, 0, v.mag(), 0);
-        line(0, 0, m1, 0);
 
         push();
         translate(m1, 0);
@@ -128,9 +131,13 @@ class Capacitor extends SinglePort {
 
     drawComponent(x1, y1, x2, y2) {
         var v = createVector(x2 - x1, y2 - y1);
+        var vn = v.copy().normalize(v);
         var m1 = v.mag() / 2 - 0.5 * GRID_SIZE;
         var m2 = v.mag() / 2 + 0.5 * GRID_SIZE;
         var step = (m2 - m1) / 6;
+
+        line(x1, y1, x1 + vn.x * m1, y1 + vn.y * m1);
+        line(x2, y2, x2 - vn.x * m1, y2 - vn.y * m1);
 
         push();
         translate(x1, y1);
@@ -138,8 +145,6 @@ class Capacitor extends SinglePort {
 
         textRotated(this.capacitance, m1 + this.size, -GRID_SIZE / 2, -1.0 * v.heading())
 
-        line(m2, 0, v.mag(), 0);
-        line(0, 0, m1, 0);
         line(m1, -this.size, m1, this.size);
         line(m2, -this.size, m2, this.size);
 
@@ -160,6 +165,7 @@ class Diode extends SinglePort {
     drawComponent(x1, y1, x2, y2) {
         var v = createVector(x2 - x1, y2 - y1);
         var m = v.mag() / 2;
+        var s = this.size * 0.75;
 
         line(x1, y1, x2, y2);
 
@@ -168,11 +174,11 @@ class Diode extends SinglePort {
         rotate(v.heading());
         beginShape(TRIANGLES);
         fill(0);
-        vertex(m - this.size, this.size);
-        vertex(m - this.size, -this.size);
-        vertex(m + this.size, 0);
+        vertex(m - s, s);
+        vertex(m - s, -s);
+        vertex(m + s, 0);
         endShape();
-        line(m + this.size, this.size, m + this.size, -this.size);
+        line(m + s, s, m + s, -s);
         pop();
     }
 };
@@ -189,13 +195,14 @@ class ISource extends SinglePort { };
 // Switches, potentiometers
 
 function setup() {
-    canvas = createCanvas(windowWidth, windowHeight - 100);
-    canvas.position(0, 100);
-    canvas.style("z-index", "-1")
+    canvas = createCanvas(windowWidth, windowHeight - WEB_TOP_MARGIN);
+    canvas.position(0, WEB_TOP_MARGIN);
+    canvas.style("z-index", "-1");
 }
 
 function draw() {
     background(255);
+    cursor(CROSS);
 
     // update snapping position
     g_mouseX = round(mouseX / GRID_SIZE) * GRID_SIZE;
@@ -297,6 +304,7 @@ function mouseWheel(event) {
 
 function textRotated(string, x, y, rotation) {
     // Draws a rotated text
+    textSize(10);
     push();
     translate(x, y);
     rotate(rotation);
