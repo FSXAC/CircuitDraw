@@ -78,35 +78,35 @@ class Resistor extends SinglePort {
         this.resistance = r;
     }
 
-    drawComponent(x1, y1, x2, y2) { // TODO: pushing the matrix from the get go will make the intiail calc less cumbersome
-        var p1 = createVector(x1, y1);
-        var p2 = createVector(x2, y2);
-        var v = p5.Vector.sub(p2, p1);
-        var mid = p5.Vector.add(p1, p5.Vector.mult(v, 0.5));
+    drawComponent(x1, y1, x2, y2) {
+        var v = createVector(x2 - x1, y2 - y1);
+        var m1 = v.mag() / 2 - GRID_SIZE;
+        var m2 = v.mag() / 2 + GRID_SIZE;
+        var step = (m2 - m1) / 6;
 
-        var vn = p5.Vector.div(v, v.mag()).mult(GRID_SIZE);
-        var start = p5.Vector.sub(mid, vn);
-        var end = p5.Vector.add(mid, vn);
-
-        line(x1, y1, start.x, start.y);
-        line(x2, y2, end.x, end.y);
-
-        // draw resistor symbol
         push();
-        translate(start.x, start.y);
-        text(this.resistance, 10, -10);
-        rotate(vn.heading());
-        var step = GRID_SIZE / 3;
+        translate(x1, y1);
+        rotate(v.heading());
+
+        line(m2, 0, v.mag(), 0);
+        line(0, 0, m1, 0);
+
+        push();
+        translate(m1, 0);
+        textRotated(this.resistance, 10, -GRID_SIZE / 2, -1.0 * v.heading())
+
         beginShape(LINES);
-        vertex(0, 0);               // head
+        vertex(0, 0);
         vertex(0.5 * step, 10);
         for (var i = 0, pos = true; i <= 4; i++, pos = !pos) {
             vertex((0.5 + i) * step, pos ? 10 : -10);
             vertex((1.5 + i) * step, pos ? -10 : 10);
         }
-        vertex(5.5 * step, -10);    // tail
+        vertex(5.5 * step, -10);
         vertex(GRID_SIZE * 2, 0);
         endShape();
+
+        pop();
         pop();
     }
 };
@@ -151,8 +151,6 @@ function draw() {
     if (g_currentComponent != undefined) {
         g_currentComponent.draw();
     }
-
-    console.log(components.length);
 }
 
 function drawGrid() {
@@ -188,6 +186,14 @@ function mousePressed() {
             break;
         }
     }
+}
+
+function textRotated(string, x, y, rotation) {
+    // Draws a rotated text
+    push();
+    rotate(rotation);
+    text(string, x, y);
+    pop();
 }
 
 function mouseReleased() {
