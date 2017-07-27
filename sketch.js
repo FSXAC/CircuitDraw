@@ -15,12 +15,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // ====================[ CircuitDraw 0.2 ]====================
-// TODO: Add all common single port items:
-// Resistors, capacitors, inductors, diodes, LEDs, zener diodes, VSources, ISources
-
-// TODO: Add single connection components:
-// V Source, Ground
-
 // TODO: Add part editing
 
 // TODO: Add ICs
@@ -73,9 +67,20 @@ var g_currentComponent;
 
 // ====================[ APPARENTLY JS HAS CLASSES NOW ]====================
 
+class Part {
+    constructor() {
+        this.highlight = false;
+    }
+
+    setHighlight(highlight) {
+        this.highlight = highlight;
+    }
+}
+
 // ====================[ SINGLE PORT CLASSES ]====================
-class SinglePort {
+class SinglePort extends Part{
     constructor(x, y) {
+        super();
         this.x1 = x;
         this.y1 = y;
         this.x2 = 0;
@@ -98,15 +103,24 @@ class SinglePort {
         this.y2 = y;
         this.built = true;
     }
+
+    getNearestDistance(range) {
+        var v1 = createVector(this.x1, this.y1);
+        var v2 = createVector(this.x2, this.y2);
+        var mousePos = createVector(mouseX, mouseY);
+        var point = createVector(0, 0);
+        var d = getDistSqPoint2Seg(v1, v2, mousePos, point)
+
+        ellipse(point.x, point.y, 10, 10);  // debug
+        console.log(d);
+        if (d > range) return undefined;
+        else return d;
+    }
 };
 class Wire extends SinglePort {
-    constructor(x, y) {
-        super(x, y);
-        this.color = color(255, 0, 0);
-    }
-
     drawComponent(x1, y1, x2, y2) {
-        stroke(this.color);
+        if (this.highlight) stroke(255, 0, 0);
+        else stroke(0);
         line(x1, y1, x2, y2);
         stroke(0);
     }
@@ -201,6 +215,7 @@ class Inductor extends SinglePort {
         translate(x1, y1);
         rotate(v.heading());
         translate(m1, 0);
+        noFill();
         var step = (m2 - m1) / 4
         for (var i = 0; i < 4; i++) {
             var centerX = (i + 0.5) * step;
@@ -302,8 +317,9 @@ class ISource extends SinglePort {
 };
 
 // ====================[ SINGLE PIN (ZERO PORT) CLASSES ]====================
-class ZeroPort {
+class ZeroPort extends Part{
     constructor() {
+        super();
         this.x = 0;
         this.y = 0;
         this.built = false;
@@ -318,6 +334,10 @@ class ZeroPort {
         this.x = x;
         this.y = y;
         this.built = true;
+    }
+
+    getNearestDistance(range) {
+        return dist(this.x, this.y, mouseX, mouseY);
     }
 };
 class VRef extends ZeroPort {
@@ -372,9 +392,20 @@ function draw() {
     g_mouseX = round(mouseX / GRID_SIZE) * GRID_SIZE;
     g_mouseY = round(mouseY / GRID_SIZE) * GRID_SIZE;
 
-    // draw UI
-    drawCursor();
-    drawGrid();
+    // user interactions
+    if (g_currentMode == MODES.Drawing) {
+        drawCursor();
+    } else if (g_currentMode == MODES.Editing) {
+        // highlight nearst obj
+        var nearestIndex = getNearestComponentIndex();
+        if (nearestIndex != -1) {
+            // actually something near
+            components[nearestIndex].setHighlight(true);
+        }
+    }
+
+    // draw other stuff
+    drawGrid(); // TODO: make this togglable
     drawHUD();
 
     // draw components
@@ -390,12 +421,41 @@ function draw() {
 
 // ====================[ MOUSE EVENTS ]====================
 function mousePressed() {
-    // if not drawing: return (not doing anything at the moment)
-    if (g_currentMode != MODES.Drawing) return;
-
     // if mouse is outside of canvas, don't do anything
     if (g_mouseX < 0 || g_mouseY < 0 || g_mouseX > width || g_mouseY > height) return;
 
+    if (mouseButton == LEFT) {
+        if (g_currentMode == MODES.Drawing) {
+            handleComponent();
+        }
+        else if (g_currentMode == MODES.Editing) {
+            handleSelect();
+        }
+    } else if (mouseButton == CENTER) {
+        // handleModeSwitch();
+    }
+}
+
+function keyPressed() {
+    if (key == " ") {
+        handleModeSwitch();
+    }
+}
+
+function mouseReleased() {
+    finishComponent();
+}
+
+function mouseWheel(event) {
+    if (event.delta > 0) {
+        if (g_drawingComp < 8) g_drawingComp++;
+    } else {
+        if (g_drawingComp > 0) g_drawingComp--;
+    }
+}
+
+// ====================[ MOUSE EVENT HANDLERS ]====================
+function handleComponent() {
     if (g_currentComponent != undefined) {
         // there is already something, finish it
         finishComponent();
@@ -415,17 +475,15 @@ function mousePressed() {
     }
 }
 
-function mouseReleased() {
-    finishComponent();
+function handleSelect() {
+
 }
 
-function mouseWheel(event) {
-    if (event.delta > 0) {
-        if (g_drawingComp < 8) g_drawingComp++;
-    } else {
-        if (g_drawingComp > 0) g_drawingComp--;
-    }
-}   
+function handleModeSwitch() {
+    if (g_currentMode == MODES.Drawing) g_currentMode = MODES.Editing;
+    else if (g_currentMode == MODES.Editing) g_currentMode = MODES.Viewing;
+    else if (g_currentMode == MODES.Viewing) g_currentMode = MODES.Drawing;
+}
 
 // ====================[ OTHERS ]====================
 function drawGrid() {
@@ -443,9 +501,13 @@ function drawCursor() {
 }
 
 function drawHUD() {
-    var drawText = COMPONENT_NAMES[g_drawingComp];
     textSize(20);
-    text("Drawing " + drawText, 10, 30);
+    if (g_currentMode == MODES.Drawing) {
+        var drawText = COMPONENT_NAMES[g_drawingComp];
+        text("Drawing " + drawText, 10, 30);
+    } else if (g_currentMode == MODES.Editing) {
+        text("Edit mode", 10, 30);
+    }
 }
 
 function textRotated(string, x, y, rotation) {
@@ -468,4 +530,57 @@ function finishComponent() {
     g_currentComponent.setEnd(g_mouseX, g_mouseY);
     components.push(g_currentComponent);
     g_currentComponent = undefined;
+}
+
+function getNearestComponentIndex(range = 10.0) {
+    var minDist = 9999; // TODO lol
+    var nearestIndex = -1;
+    for (var i = 0; i < components.length; i++) {
+        components[i].setHighlight(false);
+        var d = components[i].getNearestDistance(range);
+        if (d === undefined) continue;
+        if (minDist > d) {
+            minDist = d;
+            nearestIndex = i;
+        }
+    }
+
+    if (minDist === undefined) return -1; // no part in range is found
+    return nearestIndex;
+}
+
+// end1, end2: two end points of the segment
+// point: point under test
+// returns a point to the closest
+function getDistSqPoint2Seg(end1, end2, point, resultBuf) {
+    var vx = point.x - end1.x;  // v = end1 -> point
+    var vy = point.y - end1.y;
+    var ux = end2.x - end1.x;   // u = end1 -> end2
+    var uy = end2.y - end1.y;
+    var det = vx * ux + vy * uy;
+
+    // outside the line segment near end1
+    if (det <= 0) {
+        resultBuf.set(end1);
+        return vx * vx + vy * vy;
+    }
+
+    var lenSq = ux * ux + uy * uy;  // lenSq = u^2
+
+    // outside the line segment near end2
+    if (det >= lenSq) {
+        resultBuf.set(end2);
+        return sq(end2.x - point.x) + sq(end2.y - point.y);
+    }
+
+    // near line segment
+    var len = sqrt(lenSq);
+    var ex = ux / len;              // e = u / |u^2|
+    var ey = uy / len;
+    var f = ex * vx + ey * vy;      // f = e . v
+    resultBuf.x = end1.x + f * ex;
+    resultBuf.y = end1.y + f * ey;
+
+    // result = end1 + f * e
+    return sq(ux *vy - uy * vx) / lenSq;  // (u x v) ^ 2 / lenSq
 }
