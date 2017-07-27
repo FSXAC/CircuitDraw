@@ -61,6 +61,11 @@ const COMPONENTS = {
     VRef: 7,
     Ground: 8
 }
+const COMPONENT_NAMES = [
+    "Wire", "Resistor", "Capacitor", "Inductor", "Diode",
+    "Voltage Source", "Current Source", "Voltage Reference",
+    "Ground Reference"
+]
 var g_drawingComp = COMPONENTS.Wire;
 
 // slot for temperary component during creation
@@ -179,7 +184,31 @@ class Capacitor extends SinglePort {
     }
 };
 class Inductor extends SinglePort {
-    // TODO: not yet implemented
+    constructor(x, y) {
+        super(x, y);
+        this.inductance = "1.0m"
+    }
+
+    drawComponent(x1, y1, x2, y2) {
+        var v = createVector(x2 - x1, y2 - y1);
+        var vn = v.copy().normalize(v);
+        var m1 = v.mag() / 2 - GRID_SIZE;
+        var m2 = v.mag() / 2 + GRID_SIZE;
+        line(x1, y1, x1 + vn.x * m1, y1 + vn.y * m1);
+        line(x2, y2, x2 - vn.x * m1, y2 - vn.y * m1);
+
+        push();
+        translate(x1, y1);
+        rotate(v.heading());
+        translate(m1, 0);
+        var step = (m2 - m1) / 4
+        for (var i = 0; i < 4; i++) {
+            var centerX = (i + 0.5) * step;
+            arc(centerX, 0, step, this.size * 1.5, PI, 0);
+        }
+        textRotated(this.inductance, this.size, -GRID_SIZE / 2, -1.0 * v.heading());
+        pop();
+    }
 };
 class Diode extends SinglePort {
     constructor(x, y) {
@@ -359,37 +388,7 @@ function draw() {
     }
 }
 
-function drawGrid() {
-    stroke(100);
-    for (var x = BORDER_SIZE; x < width - BORDER_SIZE; x += GRID_SIZE) {
-        for (var y = BORDER_SIZE; y < height - BORDER_SIZE; y += GRID_SIZE) {
-            point(x, y);
-        }
-    }
-}
-
-function drawCursor() {
-    ellipse(g_mouseX, g_mouseY, 5, 5);
-}
-
-function drawHUD() {
-    var drawText;
-
-    switch(g_drawingComp) {
-    case COMPONENTS.Wire: drawText = "Wire";  break;
-    case COMPONENTS.Resistor: drawText = "Resistor"; break;
-    case COMPONENTS.Capacitor: drawText = "Capacitor";  break;
-    case COMPONENTS.Inductor: drawText = "Inductor"; break;
-    case COMPONENTS.Diode: drawText = "Diode"; break;
-    case COMPONENTS.VSource: drawText = "V-Source"; break;
-    case COMPONENTS.ISource: drawText = "I-Source"; break;
-    case COMPONENTS.VRef: drawText = "V-Reference"; break;
-    case COMPONENTS.Ground: drawText = "Ground"; break;
-    }
-    textSize(20);
-    text("Drawing " + drawText, 10, 30);
-}
-
+// ====================[ MOUSE EVENTS ]====================
 function mousePressed() {
     // if not drawing: return (not doing anything at the moment)
     if (g_currentMode != MODES.Drawing) return;
@@ -427,6 +426,27 @@ function mouseWheel(event) {
         if (g_drawingComp > 0) g_drawingComp--;
     }
 }   
+
+// ====================[ OTHERS ]====================
+function drawGrid() {
+    stroke(100);
+    for (var x = BORDER_SIZE; x < width - BORDER_SIZE; x += GRID_SIZE) {
+        for (var y = BORDER_SIZE; y < height - BORDER_SIZE; y += GRID_SIZE) {
+            point(x, y);
+        }
+    }
+}
+
+function drawCursor() {
+    stroke(200);
+    rect(g_mouseX - 5, g_mouseY - 5, 10, 10);
+}
+
+function drawHUD() {
+    var drawText = COMPONENT_NAMES[g_drawingComp];
+    textSize(20);
+    text("Drawing " + drawText, 10, 30);
+}
 
 function textRotated(string, x, y, rotation) {
     // Draws a rotated text
