@@ -206,8 +206,10 @@ class Capacitor extends SinglePort {
         push();
         translate(x1, y1);
         rotate(v.heading());
+        strokeWeight(2);
         line(m1, -this.size, m1, this.size);
         line(m2, -this.size, m2, this.size);
+        strokeWeight(1);
         textRotated(this.capacitance, m1 + this.size, -GRID_SIZE / 2, -1.0 * v.heading())
         pop();
     }
@@ -421,6 +423,7 @@ function setup() {
             g_background.point(x, y);
         }
     }
+    g_background.text("Copyright © 2014-2017 Muchen He", 10, height - 10);
 }
 
 function draw() {

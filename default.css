@@ -1,6 +1,7 @@
 .pull-right {
 	float: right;
 }
+a { color: inherit; text-decoration-color: #BBB }
 a.btn { 
 	background-color: #333;
 	border: 1.5px solid #BBB; 
