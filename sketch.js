@@ -16,6 +16,10 @@
 
 // ====================[ CircuitDraw 0.2 ]====================
 // TODO: Add part editing
+// Moving parts around
+// Changing values
+
+// TODO: Add keyboard inputs during drawing
 
 // TODO: Add ICs
 
@@ -27,31 +31,17 @@
 // TODO: Add circuit analysis
 // Voltmeter, ohm meter
 
+// TODO: Optimize [DRAW GRID] (currently using 80-90% of the total processing)
+
 const WEB_TOP_MARGIN = 40;
-
-const GRID_SIZE = 20;
-const BORDER_SIZE = 0;
-const SELECT_RANGE = 25;
-
-var g_colorDefault;
-var g_colorHighlight;
-var g_drawGrid = true;
-
-var components = [];
-
-// Snapped mouse position
-var g_mouseX;
-var g_mouseY;
-
-// Modes enum
+const GRID_SIZE      = 20;
+const BORDER_SIZE    = 0;
+const SELECT_RANGE   = 25;
 const MODES = {
     Drawing: 0,
     Editing: 1,
     Viewing: 2
 }
-var g_currentMode = MODES.Drawing;
-
-// Components enum
 const COMPONENTS = {
     Wire: 0,
     Resistor: 1,
@@ -68,13 +58,21 @@ const COMPONENT_NAMES = [
     "Voltage Source", "Current Source", "Voltage Reference",
     "Ground Reference"
 ]
-var g_drawingComp = COMPONENTS.Wire;
 
-// slot for temperary component during creation
-var g_currentComponent;
+var g_colorDefault;     // [color]  standard colors
+var g_colorHighlight;   
+var g_drawGrid;         // [bool]   draw grid or not
+
+var g_components = [];  // [Part]   list of all components onscreen
+
+var g_mouseX;           // [real]   snapped mouse coordinates
+var g_mouseY;
+
+var g_currentMode;      // [enum]   current mode in MODES
+var g_drawingComp;      // [enum]   current component in COMPONENTS
+var g_currentComponent; // [Part]   component of the part in editing
 
 // ====================[ APPARENTLY JS HAS CLASSES NOW ]====================
-
 class Part {
     constructor() {
         this.highlight = false;
@@ -99,8 +97,18 @@ class SinglePort extends Part{
 
     draw() {
         stroke(this.highlight ? g_colorHighlight : g_colorDefault);
-        if (this.built) this.drawComponent(this.x1, this.y1, this.x2, this.y2);
-        else this.drawComponent(this.x1, this.y1, g_mouseX, g_mouseY);
+        if (this.built) {
+            this.drawComponent(this.x1, this.y1, this.x2, this.y2);
+            strokeWeight(3);
+            point(this.x1, this.y1);
+            point(this.x2, this.y2);
+        } else {
+            this.drawComponent(this.x1, this.y1, g_mouseX, g_mouseY);
+            strokeWeight(3);
+            point(this.x1, this.y1);
+            point(g_mouseX, g_mouseY);
+        }
+        strokeWeight(1);
     }
 
     drawComponent(x1, y1, x2, y2) {
@@ -119,16 +127,12 @@ class SinglePort extends Part{
         var mousePos = createVector(mouseX, mouseY);
         var point = createVector(0, 0);
         var d = getDistSqPoint2Seg(v1, v2, mousePos, point)
-
-        // ellipse(point.x, point.y, 10, 10);  // debug
         if (d > range) return undefined;
         else return d;
     }
 };
 class Wire extends SinglePort {
     drawComponent(x1, y1, x2, y2) {
-        // if (this.highlight) stroke(255, 0, 0);
-        // else stroke(0);
         line(x1, y1, x2, y2);
         stroke(0);
     }
@@ -139,7 +143,7 @@ class Resistor extends SinglePort {
         this.resistance = 100;
     }
 
-    set setResistance(r) {
+    setResistance(r) {
         this.resistance = r;
     }
 
@@ -182,7 +186,7 @@ class Capacitor extends SinglePort {
         this.capacitance = "0.1u"
     }
 
-    set setCapacitance(c) {
+    setCapacitance(c) {
         this.capacitance = c;
     }
 
@@ -396,10 +400,15 @@ function setup() {
     g_colorDefault = color('#000');
     g_colorHighlight = color('#49F');
 
-    cursor(CROSS);
+    // show grid on start
+    g_drawGrid = true;
 
-    console.log(width / GRID_SIZE);
-    console.log(height / GRID_SIZE);
+    // default modes
+    g_currentMode = MODES.Drawing;
+    g_drawingComp = COMPONENTS.Wire;
+
+    // default mouse cursor
+    cursor(CROSS);
 }
 
 function draw() {
@@ -410,14 +419,14 @@ function draw() {
     g_mouseY = round(mouseY / GRID_SIZE) * GRID_SIZE;
 
     // user interactions
-    if (g_currentMode == MODES.Drawing) {
+    if (g_currentMode === MODES.Drawing) {
         drawCursor();
-    } else if (g_currentMode == MODES.Editing) {
+    } else if (g_currentMode === MODES.Editing) {
         // highlight nearst obj
         var nearestIndex = getNearestComponentIndex();
         if (nearestIndex != -1) {
             // actually something near
-            components[nearestIndex].setHighlight(true);
+            g_components[nearestIndex].setHighlight(true);
         }
     }
 
@@ -426,14 +435,16 @@ function draw() {
     drawHUD();
 
     // draw components
-    for (var i = 0; i < components.length; i++) {
-        components[i].draw();
+    for (var i = 0; i < g_components.length; i++) {
+        g_components[i].draw();
     }
 
     // draw current component (if drawing)
     if (g_currentComponent != undefined) {
         g_currentComponent.draw();
     }
+
+    // noLoop();
 }
 
 // ====================[ INPUT EVENTS ]====================
@@ -451,10 +462,12 @@ function mousePressed() {
     } else if (mouseButton == CENTER) {
         handleModeSwitch();
     }
+    // redraw();
 }
 
 function mouseReleased() {
     finishComponent();
+    // redraw();
 }
 
 function mouseWheel(event) {
@@ -463,6 +476,15 @@ function mouseWheel(event) {
     } else {
         if (g_drawingComp > 0) g_drawingComp--;
     }
+    // redraw();
+}
+
+function mouseMoved() {
+    // redraw();
+}
+
+function mouseDragged() {
+    // redraw();
 }
 
 function keyPressed() {
@@ -474,6 +496,7 @@ function keyPressed() {
         handleDelete();
         break;
     }
+    // redraw();
 }
 
 function keyTyped() {
@@ -481,6 +504,7 @@ function keyTyped() {
         // toggle grid
         g_drawGrid = !g_drawGrid;
     }
+    // redraw();
 }
 
 // ====================[ MOUSE EVENT HANDLERS ]====================
@@ -509,9 +533,9 @@ function handleSelect() {
 }
 
 function handleDelete() {
-    for (var i = 0; i < components.length; i++) {
-        if (components[i].highlight && components[i] != undefined) {
-            components.splice(i, 1);
+    for (var i = 0; i < g_components.length; i++) {
+        if (g_components[i].highlight && g_components[i] != undefined) {
+            g_components.splice(i, 1);
         }
     }
 }
@@ -578,16 +602,16 @@ function finishComponent() {
 
     // don't add to component if mouse position didn't change
     g_currentComponent.setEnd(g_mouseX, g_mouseY);
-    components.push(g_currentComponent);
+    g_components.push(g_currentComponent);
     g_currentComponent = undefined;
 }
 
 function getNearestComponentIndex(range = SELECT_RANGE) {
     var minDist = 9999; // TODO lol
     var nearestIndex = -1;
-    for (var i = 0; i < components.length; i++) {
-        components[i].setHighlight(false);
-        var d = components[i].getNearestDistance(range);
+    for (var i = 0; i < g_components.length; i++) {
+        g_components[i].setHighlight(false);
+        var d = g_components[i].getNearestDistance(range);
         if (d === undefined) continue;
         if (minDist > d) {
             minDist = d;
