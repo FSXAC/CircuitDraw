@@ -8,8 +8,12 @@ As of right now, you may only draw circuit (and there is no way to save it)
 
 ## Usage
 
-Clone the repository and open `index.html` in the browser. 
+Head over to https://fsxac.github.io/CircuitDraw/ and start drawing
 
-Use the mouse wheel to scroll through different parts that you may want to place.
+- Use the scroll wheel to cycle through different componenents you want to draw.
 
-Either single click or drag to place the component.
+- Middle mouse button will toggle you between **Draw** mode and **Edit** mode
+
+- In edit mode, you may highlight a drawn component and hit `delete` to remove component
+
+- Press `G` to toggle the grid on and off
