@@ -58,6 +58,8 @@ const COMPONENTS = {
     Diode: 4,
     VSource: 5,
     ISource: 6,
+    VRef: 7,
+    Ground: 8
 }
 var g_drawingComp = COMPONENTS.Wire;
 
@@ -65,6 +67,8 @@ var g_drawingComp = COMPONENTS.Wire;
 var g_currentComponent;
 
 // ====================[ APPARENTLY JS HAS CLASSES NOW ]====================
+
+// ====================[ SINGLE PORT CLASSES ]====================
 class SinglePort {
     constructor(x, y) {
         this.x1 = x;
@@ -89,12 +93,11 @@ class SinglePort {
         this.y2 = y;
         this.built = true;
     }
-}
-
+};
 class Wire extends SinglePort {
     constructor(x, y) {
         super(x, y);
-        this.color = color(0, 0, 150);
+        this.color = color(255, 0, 0);
     }
 
     drawComponent(x1, y1, x2, y2) {
@@ -159,8 +162,8 @@ class Capacitor extends SinglePort {
     drawComponent(x1, y1, x2, y2) {
         var v = createVector(x2 - x1, y2 - y1);
         var vn = v.copy().normalize(v);
-        var m1 = v.mag() / 2 - 0.5 * GRID_SIZE;
-        var m2 = v.mag() / 2 + 0.5 * GRID_SIZE;
+        var m1 = v.mag() / 2 - 0.25 * GRID_SIZE;
+        var m2 = v.mag() / 2 + 0.25 * GRID_SIZE;
         var step = (m2 - m1) / 6;
 
         line(x1, y1, x1 + vn.x * m1, y1 + vn.y * m1);
@@ -269,6 +272,63 @@ class ISource extends SinglePort {
     }
 };
 
+// ====================[ SINGLE PIN (ZERO PORT) CLASSES ]====================
+class ZeroPort {
+    constructor() {
+        this.x = 0;
+        this.y = 0;
+        this.built = false;
+    }
+
+    draw() {
+        if (this.built) this.drawComponent(this.x, this.y);
+        else this.drawComponent(g_mouseX, g_mouseY);
+    }
+
+    setEnd(x, y) {
+        this.x = x;
+        this.y = y;
+        this.built = true;
+    }
+};
+class VRef extends ZeroPort {
+    constructor() {
+        super();
+        this.voltage = 9.0;
+    }
+
+    drawComponent(x, y) {
+        var w = GRID_SIZE * 0.5;
+
+        push();
+        translate(x, y);
+        line(0, 0, 0, -w);
+        strokeWeight(2);
+        line(-w, -w, w, -w);
+        textSize(12);
+        fill(0);
+        noStroke();
+        text(this.voltage + " V", w * 1.5, -w * 1.5);
+        pop();
+    }
+}
+class Ground extends ZeroPort {
+    drawComponent(x, y) {
+        var w = GRID_SIZE * 0.5;
+        push();
+        translate(x, y);
+        line(0, 0, 0, w);
+        beginShape(TRIANGLES);
+        noFill();
+        vertex(-w, w);
+        vertex(w, w);
+        vertex(0, GRID_SIZE);
+        endShape();
+        pop();
+    }
+}
+
+// ====================[ ENTRY POINT ]====================
 function setup() {
     canvas = createCanvas(windowWidth, windowHeight - WEB_TOP_MARGIN);
     canvas.position(0, WEB_TOP_MARGIN);
@@ -323,6 +383,8 @@ function drawHUD() {
     case COMPONENTS.Diode: drawText = "Diode"; break;
     case COMPONENTS.VSource: drawText = "V-Source"; break;
     case COMPONENTS.ISource: drawText = "I-Source"; break;
+    case COMPONENTS.VRef: drawText = "V-Reference"; break;
+    case COMPONENTS.Ground: drawText = "Ground"; break;
     }
     textSize(20);
     text("Drawing " + drawText, 10, 30);
@@ -347,6 +409,9 @@ function mousePressed() {
         case COMPONENTS.Diode:      g_currentComponent = new Diode(g_mouseX, g_mouseY);     break;
         case COMPONENTS.VSource:    g_currentComponent = new VSource(g_mouseX, g_mouseY);   break;
         case COMPONENTS.ISource:    g_currentComponent = new ISource(g_mouseX, g_mouseY);   break;
+
+        case COMPONENTS.VRef: g_currentComponent = new VRef(g_mouseX, g_mouseY); break;
+        case COMPONENTS.Ground: g_currentComponent = new Ground(g_mouseX, g_mouseY); break;
         }
     }
 }
@@ -357,7 +422,7 @@ function mouseReleased() {
 
 function mouseWheel(event) {
     if (event.delta > 0) {
-        if (g_drawingComp < 6) g_drawingComp++;
+        if (g_drawingComp < 8) g_drawingComp++;
     } else {
         if (g_drawingComp > 0) g_drawingComp--;
     }
