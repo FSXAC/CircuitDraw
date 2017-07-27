@@ -29,6 +29,9 @@ const WEB_TOP_MARGIN = 70;
 const GRID_SIZE = 20;
 const BORDER_SIZE = 0;
 
+var g_colorDefault;
+var g_colorHighlight;
+
 var components = [];
 
 // Snapped mouse position
@@ -90,6 +93,7 @@ class SinglePort extends Part{
     }
 
     draw() {
+        stroke(this.highlight ? g_colorHighlight : g_colorDefault);
         if (this.built) this.drawComponent(this.x1, this.y1, this.x2, this.y2);
         else this.drawComponent(this.x1, this.y1, g_mouseX, g_mouseY);
     }
@@ -111,16 +115,15 @@ class SinglePort extends Part{
         var point = createVector(0, 0);
         var d = getDistSqPoint2Seg(v1, v2, mousePos, point)
 
-        ellipse(point.x, point.y, 10, 10);  // debug
-        console.log(d);
+        // ellipse(point.x, point.y, 10, 10);  // debug
         if (d > range) return undefined;
         else return d;
     }
 };
 class Wire extends SinglePort {
     drawComponent(x1, y1, x2, y2) {
-        if (this.highlight) stroke(255, 0, 0);
-        else stroke(0);
+        // if (this.highlight) stroke(255, 0, 0);
+        // else stroke(0);
         line(x1, y1, x2, y2);
         stroke(0);
     }
@@ -382,6 +385,9 @@ function setup() {
     canvas = createCanvas(windowWidth, windowHeight - WEB_TOP_MARGIN);
     canvas.position(0, WEB_TOP_MARGIN);
     canvas.style("z-index", "-1");
+
+    g_colorDefault = color('#000');
+    g_colorHighlight = color('#49F');
 }
 
 function draw() {
