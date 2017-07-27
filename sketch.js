@@ -507,6 +507,8 @@ function drawCursor() {
 }
 
 function drawHUD() {
+    textSize(10);
+    text(frameRate().toFixed(1) + "fps", 10, 10);
     textSize(20);
     if (g_currentMode == MODES.Drawing) {
         var drawText = COMPONENT_NAMES[g_drawingComp];
