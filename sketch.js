@@ -1,4 +1,4 @@
-// FSXAC/CircuitDraw: Javascript webapp to draw circuit diagrams
+// FSXAC/CircuitDraw: Javascript interactive to draw circuit diagrams
 // Copyright (C) 2017 Muchen He
 
 // FSXAC/CircuitDraw is free software: you can redistribute it and/or modify
@@ -22,7 +22,10 @@
 // TODO: Add interactive components
 // Switches, potentiometers
 
+// TODO: Add interaction mode
+
 // TODO: Add circuit analysis
+// Voltmeter, ohm meter
 
 const WEB_TOP_MARGIN = 40;
 
@@ -32,6 +35,7 @@ const SELECT_RANGE = 25;
 
 var g_colorDefault;
 var g_colorHighlight;
+var g_drawGrid = true;
 
 var components = [];
 
@@ -418,7 +422,7 @@ function draw() {
     }
 
     // draw other stuff
-    drawGrid(); // TODO: make this togglable
+    if (g_drawGrid) drawGrid(); // TODO: make this togglable
     drawHUD();
 
     // draw components
@@ -469,6 +473,13 @@ function keyPressed() {
     case DELETE:        // Delete highlighted components
         handleDelete();
         break;
+    }
+}
+
+function keyTyped() {
+    if (key === 'g') {
+        // toggle grid
+        g_drawGrid = !g_drawGrid;
     }
 }
 
@@ -537,6 +548,7 @@ function drawCursor() {
 }
 
 function drawHUD() {
+    noStroke();
     textSize(10);
     text(frameRate().toFixed(1) + "fps", 10, 10);
     textSize(20);
