@@ -423,7 +423,8 @@ function setup() {
             g_background.point(x, y);
         }
     }
-    g_background.text("Copyright © 2014-2017 Muchen He", 10, height - 10);
+    g_background.fill(200);
+    g_background.text("Copyright © 2017 Muchen He", 10, height - 10);
 }
 
 function draw() {
