@@ -61,7 +61,9 @@ const COMPONENT_NAMES = [
 
 var g_colorDefault;     // [color]  standard colors
 var g_colorHighlight;   
+
 var g_drawGrid;         // [bool]   draw grid or not
+var g_background;       // [p5]     background graphic
 
 var g_components = [];  // [Part]   list of all components onscreen
 
@@ -71,6 +73,7 @@ var g_mouseY;
 var g_currentMode;      // [enum]   current mode in MODES
 var g_drawingComp;      // [enum]   current component in COMPONENTS
 var g_currentComponent; // [Part]   component of the part in editing
+
 
 // ====================[ APPARENTLY JS HAS CLASSES NOW ]====================
 class Part {
@@ -409,6 +412,15 @@ function setup() {
 
     // default mouse cursor
     cursor(CROSS);
+
+    // setup background graphic
+    g_background = createGraphics(width, height);
+    stroke(100);
+    for (var x = BORDER_SIZE; x < width - BORDER_SIZE; x += GRID_SIZE) {
+        for (var y = BORDER_SIZE; y < height - BORDER_SIZE; y += GRID_SIZE) {
+            g_background.point(x, y);
+        }
+    }
 }
 
 function draw() {
@@ -431,7 +443,7 @@ function draw() {
     }
 
     // draw other stuff
-    if (g_drawGrid) drawGrid(); // TODO: make this togglable
+    if (g_drawGrid) image(g_background, 0, 0);
     drawHUD();
 
     // draw components
@@ -557,15 +569,6 @@ function handleModeSwitch() {
 }
 
 // ====================[ OTHERS ]====================
-function drawGrid() {
-    stroke(100);
-    for (var x = BORDER_SIZE; x < width - BORDER_SIZE; x += GRID_SIZE) {
-        for (var y = BORDER_SIZE; y < height - BORDER_SIZE; y += GRID_SIZE) {
-            point(x, y);
-        }
-    }
-}
-
 function drawCursor() {
     stroke(200);
     rect(g_mouseX - 5, g_mouseY - 5, 10, 10);
