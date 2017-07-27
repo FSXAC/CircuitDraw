@@ -14,6 +14,22 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+// ====================[ CircuitDraw 0.2 ]====================
+// TODO: Add all common single port items:
+// Resistors, capacitors, inductors, diodes, LEDs, zener diodes, VSources, ISources
+
+// TODO: Add single connection components:
+// V Source, Ground
+
+// TODO: Add part editing
+
+// TODO: Add ICs
+
+// TODO: Add interactive components
+// Switches, potentiometers
+
+// TODO: Add circuit analysis
+
 const WEB_TOP_MARGIN = 70;
 
 const GRID_SIZE = 20;
@@ -25,7 +41,7 @@ var components = [];
 var g_mouseX;
 var g_mouseY;
 
-// States
+// Modes enum
 const MODES = {
     Drawing: 0,
     Editing: 1,
@@ -33,7 +49,7 @@ const MODES = {
 }
 var g_currentMode = MODES.Drawing;
 
-// Components
+// Components enum
 const COMPONENTS = {
     Wire: 0,
     Resistor: 1,
@@ -113,7 +129,6 @@ class Resistor extends SinglePort {
 
         push();
         translate(m1, 0);
-        textRotated(this.resistance, this.size, -GRID_SIZE / 2, -1.0 * v.heading())
 
         beginShape(LINES);
         vertex(0, 0);
@@ -126,6 +141,7 @@ class Resistor extends SinglePort {
         vertex(GRID_SIZE * 2, 0);
         endShape();
 
+        textRotated(this.resistance, this.size, -GRID_SIZE / 2, -1.0 * v.heading())
         pop();
         pop();
     }
@@ -153,9 +169,9 @@ class Capacitor extends SinglePort {
         push();
         translate(x1, y1);
         rotate(v.heading());
-        textRotated(this.capacitance, m1 + this.size, -GRID_SIZE / 2, -1.0 * v.heading())
         line(m1, -this.size, m1, this.size);
         line(m2, -this.size, m2, this.size);
+        textRotated(this.capacitance, m1 + this.size, -GRID_SIZE / 2, -1.0 * v.heading())
         pop();
     }
 };
@@ -163,7 +179,7 @@ class Inductor extends SinglePort {
     // TODO: not yet implemented
 };
 class Diode extends SinglePort {
-    constructor (x, y) {
+    constructor(x, y) {
         super(x, y);
         this.v_d    // voltage across diode
         this.v_t    // thermal voltage
@@ -190,17 +206,68 @@ class Diode extends SinglePort {
         pop();
     }
 };
-class VSource extends SinglePort { };
-class ISource extends SinglePort { };
+class VSource extends SinglePort {
+    constructor(x, y) {
+        super(x, y);
+        this.voltage = 9.0;
+    }
 
-// TODO: Add all common single port items:
-// Resistors, capacitors, inductors, diodes, LEDs, zener diodes, VSources, ISources
+    drawComponent(x1, y1, x2, y2) {
+        var v = createVector(x2 - x1, y2 - y1);
+        var m = v.mag() / 2;
 
-// TODO: Add single connection components:
-// V Source, Ground
+        var ms = this.size / 3;
+        var mc = this.size * 3;
+        var mn = m - mc / 4;
+        var mp = m + mc / 4;
 
-// TODO: Add interactive components
-// Switches, potentiometers
+        line(x1, y1, x2, y2);
+
+        push();
+        translate(x1, y1);
+        rotate(v.heading());
+        fill(255);
+        ellipse(m, 0, mc, mc);
+        line(mn, ms, mn, -ms);
+        line(mp, ms, mp, -ms);
+        line(mp - ms, 0, mp + ms, 0);
+        textRotated(this.voltage + " V", m, -GRID_SIZE, -1.0 * v.heading())
+        pop();
+    }
+};
+class ISource extends SinglePort {
+    constructor(x, y) {
+        super(x, y);
+        this.current = 1.0;
+    }
+
+    drawComponent(x1, y1, x2, y2) {
+        var v = createVector(x2 - x1, y2 - y1);
+        var m = v.mag() / 2;
+
+        var ms = this.size / 3;
+        var mc = this.size * 3;
+        var mn = m - mc / 4;
+        var mp = m + mc / 4;
+
+        line(x1, y1, x2, y2);
+
+        push();
+        translate(x1, y1);
+        rotate(v.heading());
+        fill(255);
+        ellipse(m, 0, mc, mc);
+        line(mn, 0, mp, 0);
+        beginShape(TRIANGLES);
+        fill(0);
+        vertex(mp - ms, ms);
+        vertex(mp - ms, -ms);
+        vertex(mp, 0);
+        endShape();
+        textRotated(this.current + " A", m, -GRID_SIZE, -1.0 * v.heading())
+        pop();
+    }
+};
 
 function setup() {
     canvas = createCanvas(windowWidth, windowHeight - WEB_TOP_MARGIN);
@@ -273,27 +340,13 @@ function mousePressed() {
         finishComponent();
     } else {
         switch(g_drawingComp) {
-        case COMPONENTS.Wire: 
-            g_currentComponent = new Wire(g_mouseX, g_mouseY);
-            break;
-        case COMPONENTS.Resistor:
-            g_currentComponent = new Resistor(g_mouseX, g_mouseY);
-            break;
-        case COMPONENTS.Capacitor: 
-            g_currentComponent = new Capacitor(g_mouseX, g_mouseY);
-            break;
-        case COMPONENTS.Inductor:
-            g_currentComponent = new Inductor(g_mouseX, g_mouseY);
-            break;
-        case COMPONENTS.Diode:
-            g_currentComponent = new Diode(g_mouseX, g_mouseY);
-            break;
-        case COMPONENTS.VSource:
-            g_currentComponent = new VSource(g_mouseX, g_mouseY);
-            break;
-        case COMPONENTS.ISource:
-            g_currentComponent = new ISource(g_mouseX, g_mouseY);
-            break;
+        case COMPONENTS.Wire:       g_currentComponent = new Wire(g_mouseX, g_mouseY);      break;
+        case COMPONENTS.Resistor:   g_currentComponent = new Resistor(g_mouseX, g_mouseY);  break;
+        case COMPONENTS.Capacitor:  g_currentComponent = new Capacitor(g_mouseX, g_mouseY); break;
+        case COMPONENTS.Inductor:   g_currentComponent = new Inductor(g_mouseX, g_mouseY);  break;
+        case COMPONENTS.Diode:      g_currentComponent = new Diode(g_mouseX, g_mouseY);     break;
+        case COMPONENTS.VSource:    g_currentComponent = new VSource(g_mouseX, g_mouseY);   break;
+        case COMPONENTS.ISource:    g_currentComponent = new ISource(g_mouseX, g_mouseY);   break;
         }
     }
 }
@@ -312,7 +365,9 @@ function mouseWheel(event) {
 
 function textRotated(string, x, y, rotation) {
     // Draws a rotated text
-    textSize(10);
+    textSize(12);
+    fill(0);
+    noStroke();
     push();
     translate(x, y);
     rotate(rotation);
