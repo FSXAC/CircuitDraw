@@ -24,10 +24,11 @@
 
 // TODO: Add circuit analysis
 
-const WEB_TOP_MARGIN = 70;
+const WEB_TOP_MARGIN = 40;
 
 const GRID_SIZE = 20;
 const BORDER_SIZE = 0;
+const SELECT_RANGE = 25;
 
 var g_colorDefault;
 var g_colorHighlight;
@@ -329,6 +330,7 @@ class ZeroPort extends Part{
     }
 
     draw() {
+        stroke(this.highlight ? g_colorHighlight : g_colorDefault);
         if (this.built) this.drawComponent(this.x, this.y);
         else this.drawComponent(g_mouseX, g_mouseY);
     }
@@ -340,7 +342,8 @@ class ZeroPort extends Part{
     }
 
     getNearestDistance(range) {
-        return dist(this.x, this.y, mouseX, mouseY);
+        var d = dist(this.x, this.y, mouseX, mouseY); 
+        return (d < range ? d : undefined);
     }
 };
 class VRef extends ZeroPort {
@@ -388,11 +391,15 @@ function setup() {
 
     g_colorDefault = color('#000');
     g_colorHighlight = color('#49F');
+
+    cursor(CROSS);
+
+    console.log(width / GRID_SIZE);
+    console.log(height / GRID_SIZE);
 }
 
 function draw() {
     background(255);
-    cursor(CROSS);
 
     // update snapping position
     g_mouseX = round(mouseX / GRID_SIZE) * GRID_SIZE;
@@ -425,7 +432,7 @@ function draw() {
     }
 }
 
-// ====================[ MOUSE EVENTS ]====================
+// ====================[ INPUT EVENTS ]====================
 function mousePressed() {
     // if mouse is outside of canvas, don't do anything
     if (g_mouseX < 0 || g_mouseY < 0 || g_mouseX > width || g_mouseY > height) return;
@@ -438,12 +445,6 @@ function mousePressed() {
             handleSelect();
         }
     } else if (mouseButton == CENTER) {
-        // handleModeSwitch();
-    }
-}
-
-function keyPressed() {
-    if (key == " ") {
         handleModeSwitch();
     }
 }
@@ -457,6 +458,17 @@ function mouseWheel(event) {
         if (g_drawingComp < 8) g_drawingComp++;
     } else {
         if (g_drawingComp > 0) g_drawingComp--;
+    }
+}
+
+function keyPressed() {
+    switch(keyCode) {
+    case ESCAPE:        // Discard current unbuilt component
+        g_currentComponent = undefined;
+        break;
+    case DELETE:        // Delete highlighted components
+        handleDelete();
+        break;
     }
 }
 
@@ -485,10 +497,28 @@ function handleSelect() {
 
 }
 
+function handleDelete() {
+    for (var i = 0; i < components.length; i++) {
+        if (components[i].highlight && components[i] != undefined) {
+            components.splice(i, 1);
+        }
+    }
+}
+
 function handleModeSwitch() {
-    if (g_currentMode == MODES.Drawing) g_currentMode = MODES.Editing;
-    else if (g_currentMode == MODES.Editing) g_currentMode = MODES.Viewing;
-    else if (g_currentMode == MODES.Viewing) g_currentMode = MODES.Drawing;
+    if (g_currentMode == MODES.Drawing) {
+        g_currentMode = MODES.Editing;
+        cursor(HAND);
+    }
+    else if (g_currentMode == MODES.Editing) {
+    // No view mode right now
+    //     g_currentMode = MODES.Viewing;
+    //     cursor(MOVE);
+    // }
+    // else if (g_currentMode == MODES.Viewing) {
+        g_currentMode = MODES.Drawing;
+        cursor(CROSS);
+    }
 }
 
 // ====================[ OTHERS ]====================
@@ -540,7 +570,7 @@ function finishComponent() {
     g_currentComponent = undefined;
 }
 
-function getNearestComponentIndex(range = 10.0) {
+function getNearestComponentIndex(range = SELECT_RANGE) {
     var minDist = 9999; // TODO lol
     var nearestIndex = -1;
     for (var i = 0; i < components.length; i++) {
@@ -572,7 +602,7 @@ function getDistSqPoint2Seg(end1, end2, point, resultBuf) {
         resultBuf.set(end1);
         return vx * vx + vy * vy;
     }
-
+    
     var lenSq = ux * ux + uy * uy;  // lenSq = u^2
 
     // outside the line segment near end2

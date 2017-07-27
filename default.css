@@ -1,0 +1,34 @@
+.pull-right {
+	float: right;
+}
+a.btn { 
+	background-color: #333;
+	border: 1.5px solid #BBB; 
+	border-radius: 20px; 
+	display: inline-block;
+	color: white; 
+	font-size: 0.8em;
+	padding: 4px;
+	text-align: center;
+	text-decoration: none;
+	width: 60px;
+}
+a.btn:active {
+	background-color: #111;
+}
+body {
+	margin: 0;
+	font-family: "Trebuchet MS", Helvetica, sans-serif;
+}
+div.container {
+	display: inline-block;
+	width: 50%;
+	padding: 8px;
+}
+header { 
+	background-color: #333;
+	height: 40px
+}
+span {
+	color: white;
+}
