@@ -74,6 +74,8 @@ var g_currentMode;      // [enum]   current mode in MODES
 var g_drawingComp;      // [enum]   current component in COMPONENTS
 var g_currentComponent; // [Part]   component of the part in editing
 
+var g_textOpacity = 255;// [real]   for fancy texts
+var g_textOpacityTgt = 0;
 
 // ====================[ APPARENTLY JS HAS CLASSES NOW ]====================
 class Part {
@@ -493,6 +495,7 @@ function mouseWheel(event) {
         if (g_drawingComp > 0) g_drawingComp--;
     }
     // redraw();
+    g_textOpacity = 255;
 }
 
 function mouseMoved() {
@@ -570,24 +573,29 @@ function handleModeSwitch() {
         g_currentMode = MODES.Drawing;
         cursor(CROSS);
     }
+    g_textOpacity = 255;
 }
 
 // ====================[ OTHERS ]====================
 function drawCursor() {
     stroke(200);
+    noFill();
     rect(g_mouseX - 5, g_mouseY - 5, 10, 10);
 }
 
 function drawHUD() {
     noStroke();
+    fill(0);
     textSize(10);
     text(frameRate().toFixed(1) + "fps", 10, 10);
+    fill(0, g_textOpacity);
+    g_textOpacity = lerp(g_textOpacity, g_textOpacityTgt, 0.02);
     textSize(20);
     if (g_currentMode == MODES.Drawing) {
         var drawText = COMPONENT_NAMES[g_drawingComp];
-        text("Drawing " + drawText, 10, 30);
+        text("Draw " + drawText, mouseX, mouseY + 20);
     } else if (g_currentMode == MODES.Editing) {
-        text("Edit mode", 10, 30);
+        text("Edit", mouseX, mouseY + 20);
     }
 }
 
