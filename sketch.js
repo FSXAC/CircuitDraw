@@ -410,6 +410,11 @@ function setup() {
     // show grid on start
     g_drawGrid = true;
 
+    console.log("width, height:" + width + ", " + height);
+    console.log("Wwidth, Wheight:" + windowWidth + ", " + windowHeight);
+    console.log("Dwidth, Dheight:" + displayWidth + ", " + displayHeight + "\n****\n");
+
+
     // default modes
     g_currentMode = MODES.Drawing;
     g_drawingComp = COMPONENTS.Wire;
@@ -418,15 +423,16 @@ function setup() {
     cursor(CROSS);
 
     // setup background graphic
-    g_background = createGraphics(width, height);
-    stroke(100);
-    for (var x = BORDER_SIZE; x < width - BORDER_SIZE; x += GRID_SIZE) {
-        for (var y = BORDER_SIZE; y < height - BORDER_SIZE; y += GRID_SIZE) {
-            g_background.point(x, y);
+    var windowScaleFactor = displayWidth / windowWidth;
+    if (Number.isInteger(windowScaleFactor)) {
+        g_background = createGraphics(width * windowScaleFactor, height * windowScaleFactor);
+        stroke(100);
+        for (var x = BORDER_SIZE; x < g_background.width - BORDER_SIZE; x += GRID_SIZE) {
+            for (var y = BORDER_SIZE; y < g_background.height - BORDER_SIZE; y += GRID_SIZE) {
+                g_background.point(x, y);
+            }
         }
     }
-    g_background.fill(200);
-    g_background.text("Copyright © 2017 Muchen He", 10, height - 10);
 }
 
 function draw() {
@@ -448,9 +454,8 @@ function draw() {
         }
     }
 
-    // draw other stuff
-    if (g_drawGrid) image(g_background, 0, 0);
-    drawHUD();
+    // draw background
+    drawGrid();
 
     // draw components
     for (var i = 0; i < g_components.length; i++) {
@@ -462,7 +467,9 @@ function draw() {
         g_currentComponent.draw();
     }
 
-    // noLoop();
+    // draw other stuff
+    drawHUD();
+    drawCopyright();
 }
 
 // ====================[ INPUT EVENTS ]====================
@@ -583,11 +590,25 @@ function drawCursor() {
     rect(g_mouseX - 5, g_mouseY - 5, 10, 10);
 }
 
+function drawGrid() {
+    if (g_drawGrid && g_background != undefined) {
+        image(g_background, 0, 0, width, height);
+    } else if (g_drawGrid) {
+        for (var x = BORDER_SIZE; x < width - BORDER_SIZE; x += GRID_SIZE) {
+            for (var y = BORDER_SIZE; y < height - BORDER_SIZE; y += GRID_SIZE) {
+                stroke(100);
+                point(x, y);
+            }
+        }
+        textSize(12);
+        noStroke();
+        fill(255, 0, 0);
+        text("WARNING: Current browser scale not supported. Please rescale the window and refresh (else bad performance)", 10, height - 20);
+    }
+}
+
 function drawHUD() {
     noStroke();
-    // fill(0);     // for debugging mode
-    // textSize(10);
-    // text(frameRate().toFixed(1) + "fps", 10, 10);
     fill(0, g_textOpacity);
     g_textOpacity = lerp(g_textOpacity, g_textOpacityTgt, 0.02);
     textSize(20);
@@ -597,6 +618,12 @@ function drawHUD() {
     } else if (g_currentMode == MODES.Editing) {
         text("Edit", mouseX, mouseY + 20);
     }
+}
+
+function drawCopyright() {
+    textSize(12);
+    fill(200);
+    text("Copyright © 2017 Muchen He", 10, height - 5);
 }
 
 function textRotated(string, x, y, rotation) {
