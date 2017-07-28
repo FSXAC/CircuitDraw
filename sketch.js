@@ -23,7 +23,8 @@
 
 // TODO: Add keyboard inputs during drawing
 
-// TODO: Add ICs
+// TODO: Validate function (called after mouse is released)
+// Check if the part being created is proper. if not, do not add to the components list
 
 // TODO: Add interactive components
 // Switches, potentiometers
@@ -32,8 +33,6 @@
 
 // TODO: Add circuit analysis
 // Voltmeter, ohm meter
-
-// TODO: Optimize [DRAW GRID] (currently using 80-90% of the total processing)
 
 const WEB_TOP_MARGIN = 40;
 const GRID_SIZE      = 20;
@@ -64,6 +63,7 @@ const COMPONENT_NAMES = [
 
 var g_colorDefault = '#000';     // [color]  standard colors
 var g_colorHighlight = '#49F';   
+var g_colorHighlightA = "#CEF"
 var g_colorSelected = '#F94';
 
 var g_drawGrid;         // [bool]   draw grid or not
@@ -80,6 +80,10 @@ var g_currentComponent; // [Part]   component of the part in editing
 
 var g_textOpacity = 255;// [real]   for fancy texts
 var g_textOpacityTgt = 0;
+
+var g_dragEdit = false; // [bool]   for selection box in edit mode
+var g_dragEditX;        // [real]
+var g_dragEditY;
 
 // ====================[ APPARENTLY JS HAS CLASSES NOW ]====================
 class Part {
@@ -143,6 +147,10 @@ class SinglePort extends Part{
         var d = getDistSqPoint2Seg(v1, v2, mousePos, point)
         if (d > range) return undefined;
         else return d;
+    }
+
+    getEndPoints() {
+        return [ createVector(this.x1, this.y1), createVector(this.x2, this.y2) ];
     }
 };
 class Wire extends SinglePort {
@@ -369,6 +377,10 @@ class ZeroPort extends Part{
         var d = dist(this.x, this.y, mouseX, mouseY); 
         return (d < range ? d : undefined);
     }
+
+    getEndPoints() {
+        return [createVector(this.x, this.y)];
+    }
 };
 class VRef extends ZeroPort {
     constructor() {
@@ -428,6 +440,7 @@ class IC extends Part{
     }
 
     drawComponent(x1, y1, x2, y2) {
+        fill(50);
         rect(x1, y1, x2 - x1, y2 - y1);
 
         if (this.built) {
@@ -439,6 +452,10 @@ class IC extends Part{
                 point(i, y2 + GRID_SIZE);
                 strokeWeight(1);
             }
+            textSize(GRID_SIZE * 0.8);
+            noStroke();
+            fill(255);
+            text("Generic IC", x1 + 0.5 * GRID_SIZE, y2 - 0.5 * GRID_SIZE);
         }
     }
 
@@ -470,7 +487,7 @@ function setup() {
     canvas.style("z-index", "-1");
 
     // show grid on start
-    g_drawGrid = true;
+    g_drawGrid = false;
 
     // default modes
     g_currentMode = MODES.Drawing;
@@ -509,6 +526,12 @@ function draw() {
             // actually something near
             g_components[nearestIndex].setHighlight(true);
         }
+
+        // drawing selection rectangle
+        if (g_dragEdit) {
+            fill(g_colorHighlightA);
+            rect(g_dragEditX, g_dragEditY, mouseX-g_dragEditX, mouseY-g_dragEditY);
+        }
     }
 
     // draw background
@@ -539,48 +562,63 @@ function mousePressed() {
             handleComponent();
         }
         else if (g_currentMode === MODES.Editing) {
-            console.log("handling select");
+            g_dragEditX = mouseX;
+            g_dragEditY = mouseY;
             handleSelect();
         }
     } else if (mouseButton === CENTER) {
         handleModeSwitch();
     }
-    // redraw();
 }
 
 function mouseReleased() {
     finishComponent();
-    // redraw();
+
+    if (g_currentMode === MODES.Editing && mouseButton === LEFT) {
+        if (g_dragEdit) {
+            selectComponentInBox(g_dragEditX, g_dragEditY, mouseX, mouseY);
+            g_dragEdit = false;
+        }
+    }
 }
 
 function mouseWheel(event) {
     if (event.delta > 0) {
-        if (g_drawingComp < 9) g_drawingComp++;
+        if (g_drawingComp < Object.keys(COMPONENTS).length - 1) g_drawingComp++;
     } else {
         if (g_drawingComp > 0) g_drawingComp--;
     }
-    // redraw();
     g_textOpacity = 255;
 }
 
 function mouseMoved() {
-    // redraw();
 }
 
 function mouseDragged() {
-    // redraw();
+    if (g_currentMode === MODES.Editing && mouseButton === LEFT) {
+        g_dragEdit = true;
+    }
 }
 
 function keyPressed() {
-    switch(keyCode) {
-    case ESCAPE:        // Discard current unbuilt component
-        g_currentComponent = undefined;
-        break;
-    case DELETE:        // Delete highlighted components
-        handleDelete();
-        break;
+    if (g_currentMode === MODES.Drawing) {
+        switch(keyCode) {
+        case ESCAPE:        // Discard current unbuilt component
+            g_currentComponent = undefined;
+            break;
+        }
+    } else if (g_currentMode === MODES.Editing) {
+        switch(keyCode) {
+        case ESCAPE:        // Deselect all
+            for (var i = 0; i < g_components.length; i++) {
+                g_components[i].setSelected(false);
+            }
+            break;
+        case DELETE:        // Delete highlighted components
+            handleDelete();
+            break;
+        }
     }
-    // redraw();
 }
 
 function keyTyped() {
@@ -617,7 +655,6 @@ function handleComponent() {
 function handleSelect() {
     // get highlighted component and select them
     for (var i = 0; i < g_components.length; i++) {
-        console.log(i + ":" + g_components[i].highlight);
         if (g_components[i].highlight && g_components[i] != undefined) {
             g_components[i].setSelected(!g_components[i].selected);
             return;
@@ -679,10 +716,9 @@ function drawHUD() {
     fill(0, g_textOpacity);
     g_textOpacity = lerp(g_textOpacity, g_textOpacityTgt, 0.02);
     textSize(20);
-    if (g_currentMode == MODES.Drawing) {
-        var drawText = COMPONENT_NAMES[g_drawingComp];
-        text("Draw " + drawText, mouseX, mouseY + 20);
-    } else if (g_currentMode == MODES.Editing) {
+    if (g_currentMode === MODES.Drawing) {
+        text("Draw " + COMPONENT_NAMES[g_drawingComp], mouseX, mouseY + 20);
+    } else if (g_currentMode === MODES.Editing) {
         text("Edit", mouseX, mouseY + 20);
     }
 }
@@ -776,4 +812,15 @@ function isInsideRect(x1, y1, x2, y2, px, py) {
     var minY = Math.min(y1, y2);
     var maxY = Math.max(y1, y2);
     return (px > minX && px < maxX && py > minY && py < maxY);
+}
+
+// parameter is a box; inspect the list of components turn their selection to TRUE if they touch the box
+function selectComponentInBox(x1, y1, x2, y2) {
+    for (var i = 0; i < g_components.length; i++) {
+        var endPoints = g_components[i].getEndPoints(); // PVector
+        for (var j = 0; j < endPoints.length; j++) {
+            if (isInsideRect(x1, y1, x2, y2, endPoints[j].x, endPoints[j].y))
+                g_components[i].setSelected(true);
+        }
+    }
 }
