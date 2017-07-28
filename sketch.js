@@ -59,8 +59,9 @@ const COMPONENT_NAMES = [
     "Ground Reference"
 ]
 
-var g_colorDefault;     // [color]  standard colors
-var g_colorHighlight;   
+var g_colorDefault = '#000';     // [color]  standard colors
+var g_colorHighlight = '#49F';   
+var g_colorSelected = '#F94';
 
 var g_drawGrid;         // [bool]   draw grid or not
 var g_background;       // [p5]     background graphic
@@ -81,10 +82,15 @@ var g_textOpacityTgt = 0;
 class Part {
     constructor() {
         this.highlight = false;
+        this.selected = false;
     }
 
     setHighlight(highlight) {
         this.highlight = highlight;
+    }
+
+    setSelected(select) {
+        this.selected = select;
     }
 }
 
@@ -101,7 +107,7 @@ class SinglePort extends Part{
     }
 
     draw() {
-        stroke(this.highlight ? g_colorHighlight : g_colorDefault);
+        stroke(this.highlight ? g_colorHighlight : this.selected ? g_colorSelected :  g_colorDefault);
         if (this.built) {
             this.drawComponent(this.x1, this.y1, this.x2, this.y2);
             strokeWeight(3);
@@ -345,7 +351,7 @@ class ZeroPort extends Part{
     }
 
     draw() {
-        stroke(this.highlight ? g_colorHighlight : g_colorDefault);
+        stroke(this.highlight ? g_colorHighlight : this.selected ? g_colorSelected : g_colorDefault);
         if (this.built) this.drawComponent(this.x, this.y);
         else this.drawComponent(g_mouseX, g_mouseY);
     }
@@ -403,9 +409,6 @@ function setup() {
     canvas = createCanvas(windowWidth, windowHeight - WEB_TOP_MARGIN);
     canvas.position(0, WEB_TOP_MARGIN);
     canvas.style("z-index", "-1");
-
-    g_colorDefault = color('#000');
-    g_colorHighlight = color('#49F');
 
     // show grid on start
     g_drawGrid = true;
@@ -477,14 +480,15 @@ function mousePressed() {
     // if mouse is outside of canvas, don't do anything
     if (g_mouseX < 0 || g_mouseY < 0 || g_mouseX > width || g_mouseY > height) return;
 
-    if (mouseButton == LEFT) {
-        if (g_currentMode == MODES.Drawing) {
+    if (mouseButton === LEFT) {
+        if (g_currentMode === MODES.Drawing) {
             handleComponent();
         }
-        else if (g_currentMode == MODES.Editing) {
+        else if (g_currentMode === MODES.Editing) {
+            console.log("handling select");
             handleSelect();
         }
-    } else if (mouseButton == CENTER) {
+    } else if (mouseButton === CENTER) {
         handleModeSwitch();
     }
     // redraw();
@@ -555,13 +559,20 @@ function handleComponent() {
 }
 
 function handleSelect() {
-
+    // get highlighted component and select them
+    for (var i = 0; i < g_components.length; i++) {
+        console.log(i + ":" + g_components[i].highlight);
+        if (g_components[i].highlight && g_components[i] != undefined) {
+            g_components[i].setSelected(!g_components[i].selected);
+            return;
+        }
+    }
 }
 
 function handleDelete() {
     for (var i = 0; i < g_components.length; i++) {
-        if (g_components[i].highlight && g_components[i] != undefined) {
-            g_components.splice(i, 1);
+        if (g_components[i].selected && g_components[i] != undefined) {
+            g_components.splice(i--, 1);
         }
     }
 }
