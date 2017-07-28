@@ -478,6 +478,13 @@ class IC extends Part{
         if (mouseX > (this.x1 - r) && mouseX < (this.x2 + r) && mouseY > (this.y1 - r) && mouseY < (this.y2 + r)) return 0;
         else return undefined;
     }
+
+    getEndPoints() {
+        return [createVector(this.x1, this.y1),
+                createVector(this.x1, this.y2),
+                createVector(this.x2, this.y1),
+                createVector(this.x2, this.y2)];
+    }
 }
 
 // ====================[ ENTRY POINT ]====================
