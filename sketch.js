@@ -578,16 +578,16 @@ function handleModeSwitch() {
 
 // ====================[ OTHERS ]====================
 function drawCursor() {
-    stroke(200);
+    stroke(g_colorHighlight);
     noFill();
     rect(g_mouseX - 5, g_mouseY - 5, 10, 10);
 }
 
 function drawHUD() {
     noStroke();
-    fill(0);
-    textSize(10);
-    text(frameRate().toFixed(1) + "fps", 10, 10);
+    // fill(0);     // for debugging mode
+    // textSize(10);
+    // text(frameRate().toFixed(1) + "fps", 10, 10);
     fill(0, g_textOpacity);
     g_textOpacity = lerp(g_textOpacity, g_textOpacityTgt, 0.02);
     textSize(20);
