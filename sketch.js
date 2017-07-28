@@ -15,6 +15,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // ====================[ CircuitDraw 0.2 ]====================
+
+// ====================[ TODO LIST ]====================
 // TODO: Add part editing
 // Moving parts around
 // Changing values
@@ -36,7 +38,7 @@
 const WEB_TOP_MARGIN = 40;
 const GRID_SIZE      = 20;
 const BORDER_SIZE    = 0;
-const SELECT_RANGE   = 25;
+const SELECT_RANGE   = 5;
 const MODES = {
     Drawing: 0,
     Editing: 1,
@@ -51,12 +53,13 @@ const COMPONENTS = {
     VSource: 5,
     ISource: 6,
     VRef: 7,
-    Ground: 8
+    Ground: 8,
+    IC: 9
 }
 const COMPONENT_NAMES = [
     "Wire", "Resistor", "Capacitor", "Inductor", "Diode",
     "Voltage Source", "Current Source", "Voltage Reference",
-    "Ground Reference"
+    "Ground Reference", "Chip (DIP)"
 ]
 
 var g_colorDefault = '#000';     // [color]  standard colors
@@ -404,6 +407,62 @@ class Ground extends ZeroPort {
     }
 }
 
+// ====================[ IC CLASS ]====================
+class IC extends Part{
+    constructor(x, y) {
+        super();
+        this.x1 = x;
+        this.y1 = y;
+        this.x2 = 0;
+        this.y2 = 0;
+        this.built = false;
+    }
+
+    draw() {
+        stroke(this.highlight ? g_colorHighlight : this.selected ? g_colorSelected :  g_colorDefault);
+        if (this.built) {
+            this.drawComponent(this.x1, this.y1, this.x2, this.y2);
+        } else {
+            this.drawComponent(this.x1, this.y1, g_mouseX, g_mouseY);
+        }
+    }
+
+    drawComponent(x1, y1, x2, y2) {
+        rect(x1, y1, x2 - x1, y2 - y1);
+
+        if (this.built) {
+            for (var i = x1; i <= x2; i += GRID_SIZE) {
+                line(i, y1, i, y1 - GRID_SIZE);
+                line(i, y2, i, y2 + GRID_SIZE);
+                strokeWeight(3);
+                point(i, y1 - GRID_SIZE);
+                point(i, y2 + GRID_SIZE);
+                strokeWeight(1);
+            }
+        }
+    }
+
+    setEnd(x, y) {
+        this.x2 = x;
+        this.y2 = y;
+        if (x < this.x1) {  // TODO: temp hack for resolving p1, p2 issue
+            this.x2 = this.x1;
+            this.x1 = x;
+        }
+        if (y < this.y1) {
+            this.y2 = this.y1;
+            this.y1 = y;
+        }
+        this.built = true;
+    }
+
+    getNearestDistance(r) {
+        // if (isInsideRect(this.x1, this.y1, this.x2, this.y2, mouseX, mouseY)) return 0;
+        if (mouseX > (this.x1 - r) && mouseX < (this.x2 + r) && mouseY > (this.y1 - r) && mouseY < (this.y2 + r)) return 0;
+        else return undefined;
+    }
+}
+
 // ====================[ ENTRY POINT ]====================
 function setup() {
     canvas = createCanvas(windowWidth, windowHeight - WEB_TOP_MARGIN);
@@ -412,11 +471,6 @@ function setup() {
 
     // show grid on start
     g_drawGrid = true;
-
-    console.log("width, height:" + width + ", " + height);
-    console.log("Wwidth, Wheight:" + windowWidth + ", " + windowHeight);
-    console.log("Dwidth, Dheight:" + displayWidth + ", " + displayHeight + "\n****\n");
-
 
     // default modes
     g_currentMode = MODES.Drawing;
@@ -501,7 +555,7 @@ function mouseReleased() {
 
 function mouseWheel(event) {
     if (event.delta > 0) {
-        if (g_drawingComp < 8) g_drawingComp++;
+        if (g_drawingComp < 9) g_drawingComp++;
     } else {
         if (g_drawingComp > 0) g_drawingComp--;
     }
@@ -554,6 +608,8 @@ function handleComponent() {
 
         case COMPONENTS.VRef: g_currentComponent = new VRef(g_mouseX, g_mouseY); break;
         case COMPONENTS.Ground: g_currentComponent = new Ground(g_mouseX, g_mouseY); break;
+
+        case COMPONENTS.IC: g_currentComponent = new IC(g_mouseX, g_mouseY); break;
         }
     }
 }
@@ -659,7 +715,8 @@ function finishComponent() {
     g_currentComponent = undefined;
 }
 
-function getNearestComponentIndex(range = SELECT_RANGE) {
+function getNearestComponentIndex(r = SELECT_RANGE) {
+    var range = sqrt(r);
     var minDist = 9999; // TODO lol
     var nearestIndex = -1;
     for (var i = 0; i < g_components.length; i++) {
@@ -678,7 +735,7 @@ function getNearestComponentIndex(range = SELECT_RANGE) {
 
 // end1, end2: two end points of the segment
 // point: point under test
-// returns a point to the closest
+// returns a distance from the point closest
 function getDistSqPoint2Seg(end1, end2, point, resultBuf) {
     var vx = point.x - end1.x;  // v = end1 -> point
     var vy = point.y - end1.y;
@@ -710,4 +767,13 @@ function getDistSqPoint2Seg(end1, end2, point, resultBuf) {
 
     // result = end1 + f * e
     return sq(ux *vy - uy * vx) / lenSq;  // (u x v) ^ 2 / lenSq
+}
+
+// Check if a point inside a rectange
+function isInsideRect(x1, y1, x2, y2, px, py) {
+    var minX = Math.min(x1, x2);
+    var maxX = Math.max(x1, x2);
+    var minY = Math.min(y1, y2);
+    var maxY = Math.max(y1, y2);
+    return (px > minX && px < maxX && py > minY && py < maxY);
 }
