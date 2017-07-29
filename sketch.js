@@ -14,17 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-// ====================[ CircuitDraw 0.2 ]====================
+// ====================[ CircuitDraw 0.3 ]====================
 
 // ====================[ TODO LIST ]====================
 // TODO: Add part editing
 // Moving parts around
 // Changing values
-
-// TODO: Add keyboard inputs during drawing
-
-// TODO: Validate function (called after mouse is released)
-// Check if the part being created is proper. if not, do not add to the components list
 
 // TODO: Add interactive components
 // Switches, potentiometers
