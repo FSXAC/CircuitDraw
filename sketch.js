@@ -17,6 +17,8 @@
 // ====================[ CircuitDraw 0.3 ]====================
 
 // ====================[ TODO LIST ]====================
+// TODO: Add caps lock
+
 // TODO: Add part editing
 // Moving parts around
 // Changing values
@@ -658,12 +660,13 @@ function keyTyped() {
     if (g_currentMode === MODES.Drawing && g_currentComponent != undefined) {
         if ((keyCode >= 48 && keyCode <= 57) ||     // 0-9
             (keyCode >= 97 && keyCode <= 122) ||    // a-z
+            (keyCode >= 65 && keyCode <= 90) ||     // A-Z
             (keyCode == 46)) {
             g_editStringBuf += key;
             g_editStringValid = validateEditInput()[0];
         }
     } else {
-        if (key === 'g') {
+        if (key === 'g' || key === 'G') {
             // toggle grid
             g_drawGrid = !g_drawGrid;
         }
