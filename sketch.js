@@ -214,8 +214,8 @@ class Capacitor extends SinglePort {
         this.capacitance = "0.1u"
     }
 
-    setCapacitance(c) {
-        this.capacitance = c;
+    setParameter(c) {
+        if (c != "") this.capacitance = c;
     }
 
     drawComponent(x1, y1, x2, y2) {
@@ -235,7 +235,7 @@ class Capacitor extends SinglePort {
         line(m1, -this.size, m1, this.size);
         line(m2, -this.size, m2, this.size);
         strokeWeight(1);
-        if (this.built) textRotated(this.capacitance, m1 + this.size, -GRID_SIZE / 2, -1.0 * v.heading())
+        if (this.built) textRotated(this.capacitance + "F", m1 + this.size, -GRID_SIZE / 2, -1.0 * v.heading())
         pop();
     }
 };
@@ -243,6 +243,10 @@ class Inductor extends SinglePort {
     constructor(x, y) {
         super(x, y);
         this.inductance = "1.0m"
+    }
+
+    setParameter(l) {
+        if (l != "") this.inductance = l;
     }
 
     drawComponent(x1, y1, x2, y2) {
@@ -263,7 +267,7 @@ class Inductor extends SinglePort {
             var centerX = (i + 0.5) * step;
             arc(centerX, 0, step, this.size * 1.5, PI, 0);
         }
-        if (this.built) textRotated(this.inductance, this.size, -GRID_SIZE / 2, -1.0 * v.heading());
+        if (this.built) textRotated(this.inductance + "H", this.size, -GRID_SIZE / 2, -1.0 * v.heading());
         pop();
     }
 };
@@ -301,6 +305,10 @@ class VSource extends SinglePort {
         this.voltage = 9.0;
     }
 
+    setParameter(v) {
+        if (v != "") this.voltage = v;
+    }
+
     drawComponent(x1, y1, x2, y2) {
         var v = createVector(x2 - x1, y2 - y1);
         var m = v.mag() / 2;
@@ -320,7 +328,7 @@ class VSource extends SinglePort {
         line(mn, ms, mn, -ms);
         line(mp, ms, mp, -ms);
         line(mp - ms, 0, mp + ms, 0);
-        if (this.built) textRotated(this.voltage + " V", m, -GRID_SIZE, -1.0 * v.heading())
+        if (this.built) textRotated(this.voltage + "V", m, -GRID_SIZE, -1.0 * v.heading())
         pop();
     }
 };
@@ -328,6 +336,10 @@ class ISource extends SinglePort {
     constructor(x, y) {
         super(x, y);
         this.current = 1.0;
+    }
+
+    setParameter(i) {
+        if (i != "") this.current = i;
     }
 
     drawComponent(x1, y1, x2, y2) {
@@ -353,7 +365,7 @@ class ISource extends SinglePort {
         vertex(mp - ms, -ms);
         vertex(mp, 0);
         endShape();
-        if (this.built) textRotated(this.current + " A", m, -GRID_SIZE, -1.0 * v.heading())
+        if (this.built) textRotated(this.current + "A", m, -GRID_SIZE, -1.0 * v.heading())
         pop();
     }
 };
@@ -434,6 +446,11 @@ class IC extends Part{
         this.x2 = 0;
         this.y2 = 0;
         this.built = false;
+        this.label = "IC";
+    }
+
+    setParameter(label) {
+        if (label != "") this.label = label;
     }
 
     draw() {
@@ -461,7 +478,7 @@ class IC extends Part{
             textSize(GRID_SIZE * 0.8);
             noStroke();
             fill(255);
-            text("Generic IC", x1 + 0.5 * GRID_SIZE, y2 - 0.5 * GRID_SIZE);
+            text(this.label.toUpperCase(), x1 + 0.5 * GRID_SIZE, y2 - 0.5 * GRID_SIZE);
         }
     }
 
@@ -644,7 +661,6 @@ function keyPressed() {
 
 function keyTyped() {
     if (g_currentMode === MODES.Drawing && g_currentComponent != undefined) {
-        console.log(keyCode);
         if ((keyCode >= 48 && keyCode <= 57) ||     // 0-9
             (keyCode >= 97 && keyCode <= 122) ||    // a-z
             (keyCode == 46)) {
