@@ -60,6 +60,7 @@ const COMPONENT_NAMES = [
     "Voltage Source", "Current Source", "Voltage Reference",
     "Ground Reference", "Chip (DIP)"
 ]
+const SI_PREFIX = "pnumkMG";
 
 var g_colorDefault = '#000';     // [color]  standard colors
 var g_colorHighlight = '#49F';   
@@ -85,6 +86,9 @@ var g_dragEdit = false; // [bool]   for selection box in edit mode
 var g_dragEditX;        // [real]
 var g_dragEditY;
 
+var g_editStringBuf = "";    // [string]
+var g_editStringValid;
+
 // ====================[ APPARENTLY JS HAS CLASSES NOW ]====================
 class Part {
     constructor() {
@@ -99,6 +103,8 @@ class Part {
     setSelected(select) {
         this.selected = select;
     }
+
+    setParameter(param) { }
 }
 
 // ====================[ SINGLE PORT CLASSES ]====================
@@ -162,11 +168,11 @@ class Wire extends SinglePort {
 class Resistor extends SinglePort {
     constructor(x, y) {
         super(x, y);
-        this.resistance = 100;
+        this.resistance = "100";
     }
 
-    setResistance(r) {
-        this.resistance = r;
+    setParameter(r) {
+        if (r != "") this.resistance = r;
     }
 
     drawComponent(x1, y1, x2, y2) {
@@ -197,7 +203,7 @@ class Resistor extends SinglePort {
         vertex(GRID_SIZE * 2, 0);
         endShape();
 
-        textRotated(this.resistance, this.size, -GRID_SIZE / 2, -1.0 * v.heading())
+        if (this.built) textRotated(this.resistance + "\u03A9", this.size, -GRID_SIZE / 2, -1.0 * v.heading())
         pop();
         pop();
     }
@@ -229,7 +235,7 @@ class Capacitor extends SinglePort {
         line(m1, -this.size, m1, this.size);
         line(m2, -this.size, m2, this.size);
         strokeWeight(1);
-        textRotated(this.capacitance, m1 + this.size, -GRID_SIZE / 2, -1.0 * v.heading())
+        if (this.built) textRotated(this.capacitance, m1 + this.size, -GRID_SIZE / 2, -1.0 * v.heading())
         pop();
     }
 };
@@ -257,7 +263,7 @@ class Inductor extends SinglePort {
             var centerX = (i + 0.5) * step;
             arc(centerX, 0, step, this.size * 1.5, PI, 0);
         }
-        textRotated(this.inductance, this.size, -GRID_SIZE / 2, -1.0 * v.heading());
+        if (this.built) textRotated(this.inductance, this.size, -GRID_SIZE / 2, -1.0 * v.heading());
         pop();
     }
 };
@@ -314,7 +320,7 @@ class VSource extends SinglePort {
         line(mn, ms, mn, -ms);
         line(mp, ms, mp, -ms);
         line(mp - ms, 0, mp + ms, 0);
-        textRotated(this.voltage + " V", m, -GRID_SIZE, -1.0 * v.heading())
+        if (this.built) textRotated(this.voltage + " V", m, -GRID_SIZE, -1.0 * v.heading())
         pop();
     }
 };
@@ -347,7 +353,7 @@ class ISource extends SinglePort {
         vertex(mp - ms, -ms);
         vertex(mp, 0);
         endShape();
-        textRotated(this.current + " A", m, -GRID_SIZE, -1.0 * v.heading())
+        if (this.built) textRotated(this.current + " A", m, -GRID_SIZE, -1.0 * v.heading())
         pop();
     }
 };
@@ -399,7 +405,7 @@ class VRef extends ZeroPort {
         textSize(12);
         fill(0);
         noStroke();
-        text(this.voltage + " V", w * 1.5, -w * 1.5);
+        if (this.built) text(this.voltage + " V", w * 1.5, -w * 1.5);
         pop();
     }
 }
@@ -612,6 +618,14 @@ function keyPressed() {
         switch(keyCode) {
         case ESCAPE:        // Discard current unbuilt component
             g_currentComponent = undefined;
+            g_editStringBuf = "";
+            break;
+        case BACKSPACE:
+            g_editStringBuf = g_editStringBuf.substring(0, g_editStringBuf.length - 1);
+            g_editStringValid = validateEditInput()[0];
+            break;
+        case ENTER:         // finish
+            finishComponent();
             break;
         }
     } else if (g_currentMode === MODES.Editing) {
@@ -629,11 +643,20 @@ function keyPressed() {
 }
 
 function keyTyped() {
-    if (key === 'g') {
-        // toggle grid
-        g_drawGrid = !g_drawGrid;
+    if (g_currentMode === MODES.Drawing && g_currentComponent != undefined) {
+        console.log(keyCode);
+        if ((keyCode >= 48 && keyCode <= 57) ||     // 0-9
+            (keyCode >= 97 && keyCode <= 122) ||    // a-z
+            (keyCode == 46)) {
+            g_editStringBuf += key;
+            g_editStringValid = validateEditInput()[0];
+        }
+    } else {
+        if (key === 'g') {
+            // toggle grid
+            g_drawGrid = !g_drawGrid;
+        }
     }
-    // redraw();
 }
 
 // ====================[ MOUSE EVENT HANDLERS ]====================
@@ -728,6 +751,14 @@ function drawHUD() {
     } else if (g_currentMode === MODES.Editing) {
         text("Edit", mouseX, mouseY + 20);
     }
+
+    // draw input text
+    if (g_editStringBuf != "") {
+        textSize(12);
+        if (g_editStringValid) fill(g_colorHighlight);
+        else fill(255, 0, 0);
+        text(g_editStringBuf, mouseX, mouseY + 35);
+    }
 }
 
 function drawCopyright() {
@@ -749,12 +780,19 @@ function textRotated(string, x, y, rotation) {
 }
 
 function finishComponent() {
+    // don't add to component if mouse position didn't change
     if ((g_currentComponent === undefined) ||
         (g_currentComponent.x1 == g_mouseX && g_currentComponent.y1 == g_mouseY)) return;
 
-    // don't add to component if mouse position didn't change
+    // clear edit strign buffer
+    var param = validateEditInput();
+    g_currentComponent.setParameter((param[0]) ? param[1] + param[2] : "");
+    g_editStringBuf = "";
+
     g_currentComponent.setEnd(g_mouseX, g_mouseY);
     g_components.push(g_currentComponent);
+
+    // clear the current component
     g_currentComponent = undefined;
 }
 
@@ -829,5 +867,17 @@ function selectComponentInBox(x1, y1, x2, y2) {
             if (isInsideRect(x1, y1, x2, y2, endPoints[j].x, endPoints[j].y))
                 g_components[i].setSelected(true);
         }
+    }
+}
+
+// returns true if the input is valid (according to regex)
+function validateEditInput() {
+    if (g_drawingComp == COMPONENTS.IC){
+        return [true, g_editStringBuf, ""];
+    } else {
+        var input = g_editStringBuf.split(/([0-9]*[.]?[0-9]+)/g);
+        var valid = input.length === 3 && input[1] != undefined && 
+                    ((input[2].length == 1 && SI_PREFIX.indexOf(input[2]) > -1) || input[2].length == 0);
+        return [valid, input[1], input[2]];
     }
 }
