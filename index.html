@@ -26,4 +26,14 @@
             </div>
         </header>
     </body>
+    <script>
+    function preventBackspaceHandler(evt) {
+        evt = evt || window.event;
+        if (evt.keyCode == 8) {
+            return false;
+        }
+    }
+
+    document.onkeydown = preventBackspaceHandler;
+    </script>
 </html>
