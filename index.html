@@ -1,39 +1,40 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <meta name="description" content="">
-        <meta name="author" content="">
-        <title>&#x26A1 CircuitDraw</title>
-        <link href="default.css" rel="stylesheet">
-        <script language="javascript" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.11/p5.min.js"></script>
-        <script language="javascript" src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.11/addons/p5.dom.min.js"></script>
-        <script language="javascript" type="text/javascript" src="sketch.js"></script>
-        <script type="text/javascript">
-        </script>
-    </head>
-    <body>
-        <header>
-            <div class="container">
-                <span>&#x26A1 CircuitDraw<small style="font-size:0.6em;"> by <a href="http://www.mansurhe.com">Muchen He</small></span>
-                <div class="pull-right">
-                <!-- <a class="btn" href="#">Home</a> -->
-                <!-- <a class="btn" href="help.html" target="_blank">Help</a> -->
-                <a class="btn" href="#" onClick="window.open('help.html','Help','height=420,width=680'); return false;">Help</a><noscript>You need Javascript to use the previous link or use <a href="help.html" target="_blank">New Page</a></noscript>
-
-            </div>
-        </header>
-    </body>
-    <script>
-    function preventBackspaceHandler(evt) {
-        evt = evt || window.event;
-        if (evt.keyCode == 8) {
-            return false;
-        }
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="description" content="">
+<meta name="author" content="">
+<title>&#x26A1 CircuitDraw</title>
+<link href="default.css" rel="stylesheet">
+<script language="javascript" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.11/p5.min.js"></script>
+<script language="javascript" src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.11/addons/p5.dom.min.js"></script>
+<script language="javascript" type="text/javascript" src="sketch.js"></script>
+<script type="text/javascript">
+</script>
+</head>
+<body>
+<header>
+    <div class="container">
+        <span>&#x26A1 CircuitDraw</span><small style="font-size:0.6em;"> by <a href="http://www.mansurhe.com">Muchen He</small>
+        <!-- <div> -->
+            <a class="btn" href="#" onClick="window.open('help.html','Help','height=420,width=680'); return false;">Help</a><noscript>You need Javascript to use the previous link or use <a href="help.html" target="_blank">New Page</a></noscript>
+            <a class="btn" id="saveButton" href="#">Save</a>
+            <input type="file" id="fileInput" value="Import"/>
+            <a class="btn" id="loadButton" href="#">Load</a>
+        <!-- </div> -->
+        <a id="saveAnchor" style="display:none;"></a>
+    </div>
+</header>
+</body>
+<script>
+function preventBackspaceHandler(evt) {
+    evt = evt || window.event;
+    if (evt.keyCode == 8) {
+        return false;
     }
-
-    document.onkeydown = preventBackspaceHandler;
-    </script>
+}
+document.onkeydown = preventBackspaceHandler;
+</script>
 </html>

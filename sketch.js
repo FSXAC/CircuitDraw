@@ -18,9 +18,7 @@
 
 // ====================[ TODO LIST ]====================
 // TODO: Add components
-// Antenna
 // OPAMP
-// Battery cell
 
 // TODO: Add part editing
 // Moving parts around
@@ -57,12 +55,13 @@ const COMPONENTS = {
     VRef: 10,
     Ground: 11,
     OpAmp: 12,
-    IC: 13
+    Antenna: 13,
+    IC: 14
 }
 const COMPONENT_NAMES = [
     "Wire", "Resistor", "Capacitor", "Electrolytic Capacitor", "Inductor", "Diode",
     "Oscillator", "Voltage Source", "Current Source", "Battery Cell", "Voltage Reference",
-    "Ground Reference", "Operational Amplifier", "Chip (DIP IC)"
+    "Ground Reference", "Operational Amplifier", "Antenna", "Chip (DIP IC)"
 ]
 const SI_PREFIX = "pnumkMG";
 
@@ -164,6 +163,10 @@ class SinglePort extends Part{
     }
 };
 class Wire extends SinglePort {
+    constructor(x, y) {
+        super(x, y);
+        this.partID = COMPONENTS.Wire;
+    }
     drawComponent(x1, y1, x2, y2) {
         line(x1, y1, x2, y2);
         stroke(0);
@@ -173,6 +176,7 @@ class Resistor extends SinglePort {
     constructor(x, y) {
         super(x, y);
         this.resistance = "100";
+        this.partID = COMPONENTS.Resistor;
     }
 
     setParameter(r) {
@@ -215,7 +219,8 @@ class Resistor extends SinglePort {
 class Capacitor extends SinglePort {
     constructor(x, y) {
         super(x, y);
-        this.capacitance = "0.1u"
+        this.capacitance = "0.1u";
+        this.partID = COMPONENTS.Capacitor;
     }
 
     setParameter(c) {
@@ -244,6 +249,10 @@ class Capacitor extends SinglePort {
     }
 };
 class ECapacitor extends Capacitor {
+    constructor(x, y) {
+        super(x, y);
+        this.partID = COMPONENTS.ECapacitor;
+    }
     drawComponent(x1, y1, x2, y2) {
         var v = createVector(x2 - x1, y2 - y1);
         var vn = v.copy().normalize(v);
@@ -271,6 +280,7 @@ class Inductor extends SinglePort {
     constructor(x, y) {
         super(x, y);
         this.inductance = "1.0m"
+        this.partID = COMPONENTS.Inductor
     }
 
     setParameter(l) {
@@ -305,6 +315,7 @@ class Diode extends SinglePort {
         this.v_d    // voltage across diode
         this.v_t    // thermal voltage
         this.i_rs   // reverse saturation current
+        this.partID = COMPONENTS.Diode;
     }
 
     drawComponent(x1, y1, x2, y2) {
@@ -331,6 +342,7 @@ class Oscillator extends SinglePort {
     constructor(x, y) {
         super(x, y);
         this.freq = "20M";
+        this.partID = COMPONENTS.Oscillator;
     }
 
     drawComponent(x1, y1, x2, y2) {
@@ -357,6 +369,7 @@ class VSource extends SinglePort {
     constructor(x, y) {
         super(x, y);
         this.voltage = 9.0;
+        this.partID = COMPONENTS.VSource;
     }
 
     setParameter(v) {
@@ -390,6 +403,7 @@ class ISource extends SinglePort {
     constructor(x, y) {
         super(x, y);
         this.current = 1.0;
+        this.partID = COMPONENTS.ISource;
     }
 
     setParameter(i) {
@@ -422,6 +436,9 @@ class ISource extends SinglePort {
         if (this.built) textRotated(this.current + "A", m, -GRID_SIZE, -1.0 * v.heading())
         pop();
     }
+};
+class Battery extends VSource {
+    // draw component still needs its own implementation
 };
 
 // ====================[ SINGLE PIN (ZERO PORT) CLASSES ]====================
@@ -458,6 +475,7 @@ class VRef extends ZeroPort {
     constructor() {
         super();
         this.voltage = 9.0;
+        this.partID = COMPONENTS.VRef;
     }
 
     drawComponent(x, y) {
@@ -471,11 +489,15 @@ class VRef extends ZeroPort {
         textSize(12);
         fill(0);
         noStroke();
-        if (this.built) text(this.voltage + " V", w * 1.5, -w * 1.5);
+        if (this.built) text(this.voltage + "V", w * 1.5, -w * 1.5);
         pop();
     }
-}
+};
 class Ground extends ZeroPort {
+    constructor() {
+        super();
+        this.partID = COMPONENTS.Ground;
+    }
     drawComponent(x, y) {
         var w = GRID_SIZE * 0.5;
         push();
@@ -487,6 +509,29 @@ class Ground extends ZeroPort {
         vertex(w, w);
         vertex(0, GRID_SIZE);
         endShape();
+        pop();
+    }
+};
+class Antenna extends ZeroPort {
+    constructor() {
+        super();
+        this.gain = "-20";
+        this.partID = COMPONENTS.Antenna;
+    }
+    drawComponent(x, y) {
+        var w = GRID_SIZE * 0.5;
+        push();
+        translate(x, y - GRID_SIZE * 0.5);
+        beginShape(TRIANGLES);
+        noFill();
+        vertex(0, 0);
+        vertex(w, -GRID_SIZE);
+        vertex(-w, -GRID_SIZE);
+        endShape();
+        line(0, w, 0, -GRID_SIZE);
+        fill(0);
+        noStroke();
+        if (this.built) text(this.gain + "dB", w * 1.5, -w * 1.5);
         pop();
     }
 }
@@ -501,6 +546,7 @@ class IC extends Part{
         this.y2 = 0;
         this.built = false;
         this.label = "IC";
+        this.partID = COMPONENTS.IC;
     }
 
     setParameter(label) {
@@ -591,6 +637,8 @@ function setup() {
             }
         }
     }
+
+    addEventListeners();
 }
 
 function draw() {
@@ -749,6 +797,7 @@ function handleComponent() {
 
         case COMPONENTS.VRef: g_currentComponent = new VRef(g_mouseX, g_mouseY); break;
         case COMPONENTS.Ground: g_currentComponent = new Ground(g_mouseX, g_mouseY); break;
+        case COMPONENTS.Antenna: g_currentComponent = new Antenna(g_mouseX, g_mouseY); break;
 
         case COMPONENTS.IC: g_currentComponent = new IC(g_mouseX, g_mouseY); break;
         }
@@ -953,4 +1002,34 @@ function validateEditInput() {
                     ((input[2].length == 1 && SI_PREFIX.indexOf(input[2]) > -1) || input[2].length == 0);
         return [valid, input[1], input[2]];
     }
+}
+
+// ====================[ DOM EVENT LISTENER ]====================
+function addEventListeners() {
+    document.getElementById("saveButton").addEventListener("click", handleSave);
+    document.getElementById("loadButton").addEventListener("click", handleLoad);
+}
+
+// ====================[ DOM EVENT HANDLER ]====================
+function handleSave(event) {
+    event.preventDefault();
+    var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(g_components));
+    var saveAnchor = document.getElementById("saveAnchor");
+    saveAnchor.setAttribute("href", dataStr);
+    saveAnchor.setAttribute("download", "circuit.json");
+    saveAnchor.click();
+}
+
+function handleLoad(event) {
+    event.preventDefault();
+    var files = document.getElementById("fileInput").files;
+    if (files.length != 1) return false;
+
+    var reader = new FileReader();
+    reader.onload = function(event) {
+        var result = JSON.parse(event.target.result);
+        console.log(result); // TODO
+    }
+
+    reader.readAsText(files.item(0));
 }
