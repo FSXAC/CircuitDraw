@@ -17,7 +17,10 @@
 // ====================[ CircuitDraw 0.3 ]====================
 
 // ====================[ TODO LIST ]====================
-// TODO: Add caps lock
+// TODO: Add components
+// Antenna
+// OPAMP
+// Battery cell
 
 // TODO: Add part editing
 // Moving parts around
@@ -33,7 +36,7 @@
 
 const WEB_TOP_MARGIN = 40;
 const GRID_SIZE      = 20;
-const BORDER_SIZE    = 0;
+const BORDER_SIZE    = 40;
 const SELECT_RANGE   = 5;
 const MODES = {
     Drawing: 0,
@@ -44,18 +47,22 @@ const COMPONENTS = {
     Wire: 0,
     Resistor: 1,
     Capacitor: 2,
-    Inductor: 3,
-    Diode: 4,
-    VSource: 5,
-    ISource: 6,
-    VRef: 7,
-    Ground: 8,
-    IC: 9
+    ECapacitor: 3,
+    Inductor: 4,
+    Diode: 5,
+    Oscillator: 6,
+    VSource: 7,
+    ISource: 8,
+    Battery: 9,
+    VRef: 10,
+    Ground: 11,
+    OpAmp: 12,
+    IC: 13
 }
 const COMPONENT_NAMES = [
-    "Wire", "Resistor", "Capacitor", "Inductor", "Diode",
-    "Voltage Source", "Current Source", "Voltage Reference",
-    "Ground Reference", "Chip (DIP)"
+    "Wire", "Resistor", "Capacitor", "Electrolytic Capacitor", "Inductor", "Diode",
+    "Oscillator", "Voltage Source", "Current Source", "Battery Cell", "Voltage Reference",
+    "Ground Reference", "Operational Amplifier", "Chip (DIP IC)"
 ]
 const SI_PREFIX = "pnumkMG";
 
@@ -236,6 +243,30 @@ class Capacitor extends SinglePort {
         pop();
     }
 };
+class ECapacitor extends Capacitor {
+    drawComponent(x1, y1, x2, y2) {
+        var v = createVector(x2 - x1, y2 - y1);
+        var vn = v.copy().normalize(v);
+        var m1 = v.mag() / 2 - 0.25 * GRID_SIZE;
+        var m2 = v.mag() / 2 + 0.25 * GRID_SIZE;
+        var step = (m2 - m1) / 6;
+
+        line(x1, y1, x1 + vn.x * m1, y1 + vn.y * m1);
+        line(x2, y2, x2 - vn.x * m1, y2 - vn.y * m1);
+
+        push();
+        translate(x1, y1);
+        rotate(v.heading());
+        strokeWeight(2);
+        line(m1, -this.size, m1, this.size);
+        strokeWeight(1);
+        arc(m2 + this.size * 0.5, 0, this.size, this.size * 2, HALF_PI, -HALF_PI);
+        // line(m1 - this.size, this.size, m1, this.size);
+        // line(m1 - this.size * 0.5, this.size * 1.5, m1 - this.size * 0.5, this.size*0.5);
+        if (this.built) textRotated(this.capacitance + "F", m1 + this.size, -GRID_SIZE / 2, -1.0 * v.heading())
+        pop();
+    }
+}
 class Inductor extends SinglePort {
     constructor(x, y) {
         super(x, y);
@@ -296,6 +327,32 @@ class Diode extends SinglePort {
         pop();
     }
 };
+class Oscillator extends SinglePort {
+    constructor(x, y) {
+        super(x, y);
+        this.freq = "20M";
+    }
+
+    drawComponent(x1, y1, x2, y2) {
+        var v = createVector(x2 - x1, y2 - y1);
+        var vn = v.copy().normalize(v);
+        var m1 = v.mag() / 2 - 0.5 * GRID_SIZE;
+        var m2 = v.mag() / 2 + 0.5 * GRID_SIZE;
+        var step = (m2 - m1) / 6;
+
+        line(x1, y1, x1 + vn.x * m1, y1 + vn.y * m1);
+        line(x2, y2, x2 - vn.x * m1, y2 - vn.y * m1);
+
+        push();
+        translate(x1, y1);
+        rotate(v.heading());
+        line(m1, -this.size, m1, this.size);
+        line(m2, -this.size, m2, this.size);
+        rect(m1 + this.size * 0.5, -this.size, m2 - m1 - this.size, this.size * 2);
+        if (this.built) textRotated(this.freq + "Hz", m1 + this.size, -GRID_SIZE / 2, -1.0 * v.heading())
+        pop();
+    }
+}
 class VSource extends SinglePort {
     constructor(x, y) {
         super(x, y);
@@ -680,13 +737,15 @@ function handleComponent() {
         finishComponent();
     } else {
         switch(g_drawingComp) {
-        case COMPONENTS.Wire:       g_currentComponent = new Wire(g_mouseX, g_mouseY);      break;
-        case COMPONENTS.Resistor:   g_currentComponent = new Resistor(g_mouseX, g_mouseY);  break;
-        case COMPONENTS.Capacitor:  g_currentComponent = new Capacitor(g_mouseX, g_mouseY); break;
-        case COMPONENTS.Inductor:   g_currentComponent = new Inductor(g_mouseX, g_mouseY);  break;
-        case COMPONENTS.Diode:      g_currentComponent = new Diode(g_mouseX, g_mouseY);     break;
-        case COMPONENTS.VSource:    g_currentComponent = new VSource(g_mouseX, g_mouseY);   break;
-        case COMPONENTS.ISource:    g_currentComponent = new ISource(g_mouseX, g_mouseY);   break;
+        case COMPONENTS.Wire:       g_currentComponent  = new Wire(g_mouseX, g_mouseY);      break;
+        case COMPONENTS.Resistor:   g_currentComponent  = new Resistor(g_mouseX, g_mouseY);  break;
+        case COMPONENTS.Capacitor:  g_currentComponent  = new Capacitor(g_mouseX, g_mouseY); break;
+        case COMPONENTS.ECapacitor: g_currentComponent  = new ECapacitor(g_mouseX, g_mouseY);break;
+        case COMPONENTS.Inductor:   g_currentComponent  = new Inductor(g_mouseX, g_mouseY);  break;
+        case COMPONENTS.Diode:      g_currentComponent  = new Diode(g_mouseX, g_mouseY);     break;
+        case COMPONENTS.Oscillator: g_currentComponent  = new Oscillator(g_mouseX, g_mouseY);break;
+        case COMPONENTS.VSource:    g_currentComponent  = new VSource(g_mouseX, g_mouseY);   break;
+        case COMPONENTS.ISource:    g_currentComponent  = new ISource(g_mouseX, g_mouseY);   break;
 
         case COMPONENTS.VRef: g_currentComponent = new VRef(g_mouseX, g_mouseY); break;
         case COMPONENTS.Ground: g_currentComponent = new Ground(g_mouseX, g_mouseY); break;
