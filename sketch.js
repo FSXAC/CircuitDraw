@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-// ====================[ CircuitDraw 0.3 ]====================
+// ====================[ CircuitDraw 0.4 ]====================
 
 // ====================[ TODO LIST ]====================
 // TODO: Add components
@@ -1040,7 +1040,7 @@ function handleLoad(event) {
             if (r.partID <= 9) {    // TODO: make less hard coded comparison
                 // single port
                 switch(r.partID) {
-                case COMPONENTS.Wire: 
+                case COMPONENTS.Wire:   // TODO: make this less repetitive
                     c = new Wire(r.x1, r.y1);
                     break;
                 case COMPONENTS.Resistor: 
