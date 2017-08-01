@@ -1,33 +1,95 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <meta name="description" content="">
-        <meta name="author" content="">
-        <title>&#x26A1 CircuitDraw Help</title>
-        <link href="default.css" rel="stylesheet">
-    </head>
-    <body style="margin: 10px">
-        <section>
-            <h1>CircuitDraw v0.4</h1>
-            <h3>Help</h3>
-            <ul>
-                <li>Use the scroll wheel to cycle through different componenents you want to draw.</li>
-                <li>Middle mouse button will toggle you between <b>Draw</b> mode and <b>Edit</b> mode</li>
-                <li>In edit mode, you may highlight a drawn component and hit <span style="font-family: monospace; background-color: #EEE; color:#222">delete</span> to remove component</li>
-                <li>Press <span style="font-family: monospace; background-color: #EEE; color:#222">G</span> to toggle the grid on and off</li>
-            </ul>
-        </section>
-        <section>
-        <a href="javascript:window.open('','_self').close();">Go draw</a>
-        </section>
-        <footer style="margin-top: 100px;">
-        <small>
-            <p>Copyright © 2017 Muchen He</p>
-            This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.
-        </small>
-        </footer>
-    </body>
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="description" content="">
+<meta name="author" content="">
+<title>&#x26A1 CircuitDraw Help</title>
+<link href="default.css" rel="stylesheet">
+</head>
+<style>
+    span.key {
+    font-family: monospace;
+    background: #EEE;
+    color: #222;
+    border: 1px solid #DDD;
+    border-radius: 4px;
+    padding: 2px;
+    }
+</style>
+<body style="margin: 10px; font-family: 'Trebuchet MS', Helvetica, sans-serif;">
+<section>
+    <h1>CircuitDraw v0.4</h1>
+    <h3>Controls Help</h3>
+    <ul>
+        <li>Click and drag to draw components.</li>
+        <li>While drawing, you may enter numerical parameters to the component you're drawing (eg: 1.33k, 6.5m).</li>
+        <li>While drawing, press <span class="key">ESC</span> to cancel current component</li>
+        <li>Release the mouse, or click again, or pressing <span class="key">Enter</span> will draw the component</li>
+        <li>
+            Use <strong>Scroll Wheel</strong> to cycle through different componenents you want to draw:
+            <table>
+                <tr>
+                    <td><em>Passive</em></td>
+                    <td><em>Active</em></td>
+                    <td><em>Others</em> </td>
+                </tr>
+                <tr>
+                    <td>
+                        <ul>
+                            <li>Wire</li>
+                            <li>Resistor</li>
+                            <li>Capacitor</li>
+                            <li>Electrolytic Capacitor</li>
+                            <li>Inductor</li>
+                            <li>Diode</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>Voltage Source</li>
+                            <li>Current Source</li>
+                            <li>Battery</li>
+                            <li>Operational Amplifier</li>
+                        </ul>
+                    </td>
+                    <td>
+                        
+                        <ul>
+                            <li>Oscillator</li>
+                            <li>Voltage reference</li>
+                            <li>Ground</li>
+                            <li>Antenna</li>
+                            <li>IC</li>
+                        </ul>
+                    </td>
+                </tr>
+            </table>
+        </li>
+        <li>Use <strong>Middle mouse</strong> button to toggle between <b>Draw</b> mode and <b>Edit</b> mode.</li>
+        <li>In <b>Edit</b> mode, mouse over an existing component to highlight it, click once to select it. Click again to deselect. You may also click and drag to select multiple components.</li>
+        <li>Press <span class="key">delete</span> to delete the selected components.</li>
+        <li>Press <span class="key">ESC</span> to deselect.</li>
+        <li>Press <span class="key">G</span> to toggle the grid.</li>
+    </ul>
+    <h3>Saving/Loading Help</h3>
+    <ul>
+        <li>Click on the title on the top to change name of the current circuit. You can enter anything you want (eg: <em>H-Bridge</em>). Press <span class="key">Enter</span> to save the name.</li>
+        <li>Click "Save" and you will receive a download of the current circuit as a .json file.</li>
+        <li>To load a circuit, choose the .json file to upload and click "Load".
+        <small>Warning: Loading will discard all components on the screen and then reload</small>
+        </li>
+</section>
+<section>
+    <a href="javascript:window.open('','_self').close();">Go draw</a>
+</section>
+<footer style="margin-top: 50px;">
+    <small>
+    <p>Copyright © 2017 Muchen He</p>
+    This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.
+    </small>
+</footer>
+</body>
 </html>
