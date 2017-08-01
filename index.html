@@ -9,6 +9,7 @@
 <title>&#x26A1 CircuitDraw</title>
 <link href="default.css" rel="stylesheet">
 <script language="javascript" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.11/p5.min.js"></script>
+<!-- <script src="http://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script> -->
 <script language="javascript" src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.11/addons/p5.dom.min.js"></script>
 <script language="javascript" type="text/javascript" src="sketch.js"></script>
 <script type="text/javascript">
@@ -19,7 +20,10 @@
     <div class="container">
         <span>&#x26A1 CircuitDraw<small style="font-size:0.6em;"> by <a href="http://www.mansurhe.com">Muchen He</small></span>
         <!-- <div> -->
-            <a class="btn" href="#" onClick="window.open('help.html','Help','height=420,width=680'); return false;">Help</a><noscript>You need Javascript to use the previous link or use <a href="help.html" target="_blank">New Page</a></noscript>
+            <a class="btn" href="#" onClick="window.open('help.html','Help','height=420,width=680'); return false;">Help</a>
+            <!-- <label>Untitled circuit</label>
+            <input class="clickedit" type="text"/>
+            <div class="clearfix"></div> -->
             <a class="btn" id="saveButton" href="#">Save</a>
             <input type="file" id="fileInput" value="Import" style="color:white"/>
             <a class="btn" id="loadButton" href="#">Load</a>
@@ -29,6 +33,7 @@
 </header>
 </body>
 <script>
+// ====================[ DISABLE BACKSPACE ]====================
 function preventBackspaceHandler(evt) {
     evt = evt || window.event;
     if (evt.keyCode == 8) {
@@ -36,5 +41,29 @@ function preventBackspaceHandler(evt) {
     }
 }
 document.onkeydown = preventBackspaceHandler;
+// ====================[ TITLE EDIT ]====================
+// function endEdit(e) {
+//     var input = $(e.target),
+//         label = input && input.prev();
+
+//     label.text(input.val() === '' ? defaultText : input.val());
+//     input.hide();
+//     label.show();
+// }
+
+// $('.clickedit').hide()
+// .focusout(endEdit)
+// .keyup(function (e) {
+//     if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
+//         endEdit(e);
+//         return false;
+//     } else {
+//         return true;
+//     }
+// })
+// .prev().click(function () {
+//     $(this).hide();
+//     $(this).next().show().focus();
+// });
 </script>
 </html>
