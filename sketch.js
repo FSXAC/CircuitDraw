@@ -32,7 +32,7 @@
 // TODO: Add circuit analysis
 // Voltmeter, ohm meter
 
-const WEB_TOP_MARGIN = 40;
+const WEB_TOP_MARGIN = 50;
 const GRID_SIZE      = 20;
 const BORDER_SIZE    = 40;
 const SELECT_RANGE   = 5;
@@ -688,6 +688,7 @@ function draw() {
 function mousePressed() {
     // if mouse is outside of canvas, don't do anything
     if (g_mouseX < 0 || g_mouseY < 0 || g_mouseX > width || g_mouseY > height) return;
+    if (!g_sketchActive) return;
 
     if (mouseButton === LEFT) {
         if (g_currentMode === MODES.Drawing) {
@@ -704,6 +705,8 @@ function mousePressed() {
 }
 
 function mouseReleased() {
+    if (!g_sketchActive) return;
+
     finishComponent();
 
     if (g_currentMode === MODES.Editing && mouseButton === LEFT) {
@@ -715,6 +718,7 @@ function mouseReleased() {
 }
 
 function mouseWheel(event) {
+    if (!g_sketchActive) return;
     if (event.delta > 0) {
         if (g_drawingComp < Object.keys(COMPONENTS).length - 1) g_drawingComp++;
     } else {
@@ -727,12 +731,14 @@ function mouseMoved() {
 }
 
 function mouseDragged() {
+    if (!g_sketchActive) return;
     if (g_currentMode === MODES.Editing && mouseButton === LEFT) {
         g_dragEdit = true;
     }
 }
 
 function keyPressed() {
+    if (!g_sketchActive) return;
     if (g_currentMode === MODES.Drawing) {
         switch(keyCode) {
         case ESCAPE:        // Discard current unbuilt component
@@ -762,6 +768,7 @@ function keyPressed() {
 }
 
 function keyTyped() {
+    if (!g_sketchActive) return;
     if (g_currentMode === MODES.Drawing && g_currentComponent != undefined) {
         if ((keyCode >= 48 && keyCode <= 57) ||     // 0-9
             (keyCode >= 97 && keyCode <= 122) ||    // a-z

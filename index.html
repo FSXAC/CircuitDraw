@@ -7,63 +7,77 @@
 <meta name="description" content="">
 <meta name="author" content="">
 <title>&#x26A1 CircuitDraw</title>
-<link href="default.css" rel="stylesheet">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<!-- <link href="default.css" rel="stylesheet"> -->
+<script src="http://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 <script language="javascript" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.11/p5.min.js"></script>
-<!-- <script src="http://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script> -->
 <script language="javascript" src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.11/addons/p5.dom.min.js"></script>
 <script language="javascript" type="text/javascript" src="sketch.js"></script>
 <script type="text/javascript">
 </script>
 </head>
 <body>
-<header>
-    <div class="container">
-        <span>&#x26A1 CircuitDraw<small style="font-size:0.6em;"> by <a href="/">Muchen He</small></span>
-        <!-- <div> -->
-            <a class="btn" href="#" onClick="window.open('help.html','Help','height=420,width=680'); return false;">Help</a>
-            <!-- <label>Untitled circuit</label>
-            <input class="clickedit" type="text"/>
-            <div class="clearfix"></div> -->
-            <a class="btn" id="saveButton" href="#">Save</a>
-            <input type="file" id="fileInput" value="Import" style="color:white"/>
-            <a class="btn" id="loadButton" href="#">Load</a>
-        <!-- </div> -->
-        <a id="saveAnchor" style="display:none;"></a>
+<nav class="navbar navbar-default navbar-static-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">&#x26A1 CircuitDraw</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <a class="btn btn-default navbar-btn" onClick="window.open('help.html','Help','height=420,width=680'); return false;">Help</a>
+            <div class="navbar-form navbar-right">
+                <label style="color:inherit; margin:0 8px;">Untitled circuit</label>
+                <input class="clickedit form-control" placeholder="Circuit name" type="text"/>
+                <a class="btn btn-default" id="saveButton" href="#">Save</a>
+                <input class="form-control" type="file" id="fileInput" value="Import"/>
+                <a class="btn btn-default" id="loadButton" href="#">Load</a>
+            </div>
+        </div>
     </div>
-</header>
+    <a id="saveAnchor" style="display:none;"></a>
+</nav>
 </body>
 <script>
 // ====================[ DISABLE BACKSPACE ]====================
+var g_sketchActive = true;
 function preventBackspaceHandler(evt) {
-    evt = evt || window.event;
-    if (evt.keyCode == 8) {
-        return false;
-    }
+if (!g_sketchActive) return;
+evt = evt || window.event;
+if (evt.keyCode == 8) {
+return false;
+}
 }
 document.onkeydown = preventBackspaceHandler;
 // ====================[ TITLE EDIT ]====================
-// function endEdit(e) {
-//     var input = $(e.target),
-//         label = input && input.prev();
-
-//     label.text(input.val() === '' ? defaultText : input.val());
-//     input.hide();
-//     label.show();
-// }
-
-// $('.clickedit').hide()
-// .focusout(endEdit)
-// .keyup(function (e) {
-//     if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
-//         endEdit(e);
-//         return false;
-//     } else {
-//         return true;
-//     }
-// })
-// .prev().click(function () {
-//     $(this).hide();
-//     $(this).next().show().focus();
-// });
+function endEdit(e) {
+defaultText = "Untitled circuit"
+var input = $(e.target),
+label = input && input.prev();
+label.text(input.val() === '' ? defaultText : input.val());
+input.hide();
+label.show();
+g_sketchActive = true;
+}
+$('.clickedit').hide()
+.focusout(endEdit)
+.keyup(function (e) {
+if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
+endEdit(e);
+return false;
+} else {
+return true;
+}
+})
+.prev().click(function () {
+g_sketchActive = false;
+$(this).hide();
+$(this).next().show().focus();
+});
 </script>
 </html>
