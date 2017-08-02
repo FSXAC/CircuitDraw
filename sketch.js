@@ -695,8 +695,8 @@ class MOSFET extends Part {
 // ====================[ ENTRY POINT ]====================
 function setup() {
     try {
-        // loadJSON("http://localhost:8000/default.json", populateCircuit);
-        loadJSON("https://www.muchen.ca/CircuitDraw/default.json", populateCircuit);
+        // loadJSON("https://www.muchen.ca/CircuitDraw/default.json", populateCircuit);
+        loadJSON("default.json", populateCircuit);
     } catch (err) {
         console.log(err);
     }
@@ -784,6 +784,8 @@ function mousePressed() {
             handleComponent();
         }
         else if (g_currentMode === MODES.Editing) {
+            // deselect all first
+            deselectAllComponents();
             g_dragEditX = mouseX;
             g_dragEditY = mouseY;
             handleSelect();
@@ -1084,6 +1086,13 @@ function isInsideRect(x1, y1, x2, y2, px, py) {
     var minY = Math.min(y1, y2);
     var maxY = Math.max(y1, y2);
     return (px > minX && px < maxX && py > minY && py < maxY);
+}
+
+// deselects everything
+function deselectAllComponents() {
+    for (var i = 0, len = g_components.length; i < len; i++) {
+        g_components[i].setSelected(false);
+    }
 }
 
 // parameter is a box; inspect the list of components turn their selection to TRUE if they touch the box
