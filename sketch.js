@@ -696,7 +696,7 @@ class MOSFET extends Part {
 function setup() {
     try {
         // loadJSON("http://localhost:8000/default.json", populateCircuit);
-        loadJSON("default.json", populateCircuit);
+        loadJSON("https://www.muchen.ca/CircuitDraw/default.json", populateCircuit);
     } catch (err) {
         console.log(err);
     }
