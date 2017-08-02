@@ -269,6 +269,7 @@ class ECapacitor extends Capacitor {
         strokeWeight(2);
         line(m1, -this.size, m1, this.size);
         strokeWeight(1);
+        noFill();
         arc(m2 + this.size * 0.5, 0, this.size, this.size * 2, HALF_PI, -HALF_PI);
         // line(m1 - this.size, this.size, m1, this.size);
         // line(m1 - this.size * 0.5, this.size * 1.5, m1 - this.size * 0.5, this.size*0.5);
@@ -636,6 +637,7 @@ class OpAmp extends Part {
         this.x = 0;
         this.y = 0;
         this.built = false;
+        this.ideal = true;
     }
 
     draw() {
@@ -650,6 +652,7 @@ class OpAmp extends Part {
         line(-GRID_SIZE, GRID_SIZE, -0.5 * GRID_SIZE, GRID_SIZE);
         line(-GRID_SIZE, -GRID_SIZE, -0.5 * GRID_SIZE, -GRID_SIZE);
         line(1.5 * GRID_SIZE, 0, 2 * GRID_SIZE, 0);
+        if (!this.ideal) line(GRID_SIZE, -GRID_SIZE, GRID_SIZE, GRID_SIZE);
         beginShape(TRIANGLES);
         fill(255);
         vertex(-0.5 * GRID_SIZE, GRID_SIZE * 1.5);
@@ -658,7 +661,8 @@ class OpAmp extends Part {
         endShape();
         noStroke();
         fill(0);
-        text("+\n\n-", -GRID_SIZE * 0.25, -8);
+        text("+", -GRID_SIZE * 0.25, -8);
+        text("_", -GRID_SIZE * 0.25, 7);
         pop();
     }
 
@@ -676,6 +680,12 @@ class OpAmp extends Part {
     getEndPoints() {
         return [createVector(this.x, this.y)];
     }
+}
+class BJT extends Part {
+
+}
+class MOSFET extends Part {
+    
 }
 
 // ====================[ ENTRY POINT ]====================
@@ -1063,8 +1073,12 @@ function selectComponentInBox(x1, y1, x2, y2) {
     for (var i = 0; i < g_components.length; i++) {
         var endPoints = g_components[i].getEndPoints(); // PVector
         for (var j = 0; j < endPoints.length; j++) {
-            if (isInsideRect(x1, y1, x2, y2, endPoints[j].x, endPoints[j].y))
+            if (isInsideRect(x1, y1, x2, y2, endPoints[j].x, endPoints[j].y)) {
                 g_components[i].setSelected(true);
+
+                // if one of the end point is inside, there is no point checking all others
+                j = endPoints.length;
+            } else g_components[i].setSelected(false);
         }
     }
 }
