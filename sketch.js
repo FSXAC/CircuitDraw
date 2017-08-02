@@ -693,11 +693,14 @@ class MOSFET extends Part {
 }
 
 // ====================[ ENTRY POINT ]====================
-function preload() {
-    loadJSON("default.json", populateCircuit);
-}
-
 function setup() {
+    try {
+        // loadJSON("http://localhost:8000/default.json", populateCircuit);
+        loadJSON("default.json", populateCircuit);
+    } catch (err) {
+        console.log(err);
+    }
+
     canvas = createCanvas(windowWidth, windowHeight - WEB_TOP_MARGIN);
     canvas.position(0, WEB_TOP_MARGIN);
     canvas.style("z-index", "-1");
