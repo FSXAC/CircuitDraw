@@ -17,8 +17,6 @@
 // ====================[ CircuitDraw 0.4 ]====================
 
 // ====================[ TODO LIST ]====================
-// TODO: Add components
-// OPAMP
 
 // TODO: Add part editing
 // Moving parts around
@@ -31,6 +29,8 @@
 
 // TODO: Add circuit analysis
 // Voltmeter, ohm meter
+
+// TODO: Add flipping components around (f)
 
 const WEB_TOP_MARGIN = 50;
 const GRID_SIZE      = 20;
@@ -438,7 +438,28 @@ class ISource extends SinglePort {
     }
 };
 class Battery extends VSource {
-    // draw component still needs its own implementation
+    drawComponent(x1, y1, x2, y2) {
+        var v = createVector(x2 - x1, y2 - y1);
+        var vn = v.copy().normalize(v);
+        var m  = v.mag() / 2;
+        var m1 = m - 0.5 * GRID_SIZE;
+        var m2 = m1 + GRID_SIZE;
+        var m11 = m - 0.167 * GRID_SIZE;
+        var m22 = m + 0.167 * GRID_SIZE;
+
+        line(x1, y1, x1 + vn.x * m1, y1 + vn.y * m1);
+        line(x2, y2, x2 - vn.x * m1, y2 - vn.y * m1);
+
+        push();
+        translate(x1, y1);
+        rotate(v.heading());
+        line(m1, -this.size, m1, this.size);
+        line(m11, -0.5 * this.size, m11, 0.5 * this.size);
+        line(m22, -this.size, m22, this.size);
+        line(m2, -0.5 * this.size, m2, 0.5 * this.size);
+        if (this.built) textRotated(this.voltage + "V", m1, -GRID_SIZE, -1.0 * v.heading())
+        pop();
+    }
 };
 
 // ====================[ SINGLE PIN (ZERO PORT) CLASSES ]====================
@@ -536,7 +557,7 @@ class Antenna extends ZeroPort {
     }
 }
 
-// ====================[ IC CLASS ]====================
+// ====================[ OTHERS ]====================
 class IC extends Part{
     constructor(x, y) {
         super();
@@ -607,6 +628,53 @@ class IC extends Part{
                 createVector(this.x1, this.y2),
                 createVector(this.x2, this.y1),
                 createVector(this.x2, this.y2)];
+    }
+}
+class OpAmp extends Part {
+    constructor() {
+        super();
+        this.x = 0;
+        this.y = 0;
+        this.built = false;
+    }
+
+    draw() {
+        stroke(this.highlight ? g_colorHighlight : this.selected ? g_colorSelected : g_colorDefault);
+        if (this.built) this.drawComponent(this.x, this.y);
+        else this.drawComponent(g_mouseX, g_mouseY);
+    }
+
+    drawComponent(x, y) {
+        push();
+        translate(x, y);
+        line(-GRID_SIZE, GRID_SIZE, -0.5 * GRID_SIZE, GRID_SIZE);
+        line(-GRID_SIZE, -GRID_SIZE, -0.5 * GRID_SIZE, -GRID_SIZE);
+        line(1.5 * GRID_SIZE, 0, 2 * GRID_SIZE, 0);
+        beginShape(TRIANGLES);
+        fill(255);
+        vertex(-0.5 * GRID_SIZE, GRID_SIZE * 1.5);
+        vertex(-0.5 * GRID_SIZE, GRID_SIZE * -1.5);
+        vertex(1.5 * GRID_SIZE, 0);
+        endShape();
+        noStroke();
+        fill(0);
+        text("+\n\n-", -GRID_SIZE * 0.25, -8);
+        pop();
+    }
+
+    setEnd(x, y) {
+        this.x = x;
+        this.y = y;
+        this.built = true;
+    }
+
+    getNearestDistance(range) {
+        var d = dist(this.x, this.y, mouseX, mouseY); 
+        return (d < range ? d : undefined);
+    }
+
+    getEndPoints() {
+        return [createVector(this.x, this.y)];
     }
 }
 
@@ -801,9 +869,11 @@ function handleComponent() {
         case COMPONENTS.Oscillator: g_currentComponent  = new Oscillator(g_mouseX, g_mouseY);break;
         case COMPONENTS.VSource:    g_currentComponent  = new VSource(g_mouseX, g_mouseY);   break;
         case COMPONENTS.ISource:    g_currentComponent  = new ISource(g_mouseX, g_mouseY);   break;
+        case COMPONENTS.Battery:    g_currentComponent  = new Battery(g_mouseX, g_mouseY);   break;
 
         case COMPONENTS.VRef: g_currentComponent = new VRef(g_mouseX, g_mouseY); break;
         case COMPONENTS.Ground: g_currentComponent = new Ground(g_mouseX, g_mouseY); break;
+        case COMPONENTS.OpAmp: g_currentComponent = new OpAmp(g_mouseX, g_mouseY); break;
         case COMPONENTS.Antenna: g_currentComponent = new Antenna(g_mouseX, g_mouseY); break;
 
         case COMPONENTS.IC: g_currentComponent = new IC(g_mouseX, g_mouseY); break;
