@@ -361,6 +361,7 @@ class Oscillator extends SinglePort {
         rotate(v.heading());
         line(m1, -this.size, m1, this.size);
         line(m2, -this.size, m2, this.size);
+        noFill();
         rect(m1 + this.size * 0.5, -this.size, m2 - m1 - this.size, this.size * 2);
         if (this.built) textRotated(this.freq + "Hz", m1 + this.size, -GRID_SIZE / 2, -1.0 * v.heading())
         pop();
@@ -638,6 +639,7 @@ class OpAmp extends Part {
         this.y = 0;
         this.built = false;
         this.ideal = true;
+        this.partID = COMPONENTS.OpAmp
     }
 
     draw() {
@@ -666,6 +668,10 @@ class OpAmp extends Part {
         pop();
     }
 
+    cycleVariant() {
+        this.ideal = !this.ideal;
+    }
+
     setEnd(x, y) {
         this.x = x;
         this.y = y;
@@ -682,10 +688,8 @@ class OpAmp extends Part {
     }
 }
 class BJT extends Part {
-
 }
 class MOSFET extends Part {
-    
 }
 
 // ====================[ ENTRY POINT ]====================
@@ -802,6 +806,7 @@ function mouseWheel(event) {
     } else {
         if (g_drawingComp > 0) g_drawingComp--;
     }
+    // if (g_drawingComp >= 10 && g_drawGrid < 13) handlehandleComponentComponent(false);
     g_textOpacity = 255;
 }
 
@@ -817,11 +822,16 @@ function mouseDragged() {
 
 function keyPressed() {
     if (!g_sketchActive) return;
-    if (g_currentMode === MODES.Drawing) {
+    if (g_currentMode === MODES.Drawing && g_currentComponent != undefined) {
         switch(keyCode) {
         case ESCAPE:        // Discard current unbuilt component
             g_currentComponent = undefined;
             g_editStringBuf = "";
+            break;
+        case ALT:           // cycle through variants of a part (if they exist);
+            if (g_currentComponent.cycleVariant != undefined) {
+                g_currentComponent.cycleVariant();
+            }
             break;
         case BACKSPACE:
             g_editStringBuf = g_editStringBuf.substring(0, g_editStringBuf.length - 1);
@@ -864,10 +874,11 @@ function keyTyped() {
 }
 
 // ====================[ MOUSE EVENT HANDLERS ]====================
-function handleComponent() {
+function handleComponent(saveComponent = true) {
     if (g_currentComponent != undefined) {
         // there is already something, finish it
-        finishComponent();
+        if (saveComponent) finishComponent();
+        else g_currentComponent = undefined;
     } else {
         switch(g_drawingComp) {
         case COMPONENTS.Wire:       g_currentComponent  = new Wire(g_mouseX, g_mouseY);      break;
@@ -1180,7 +1191,10 @@ function handleLoad(event) {
                     c.voltage = r.voltage;
                     break;
                 case COMPONENTS.Ground: c = new Ground(); break;
-                case COMPONENTS.OpAmp: c = new OpAmp(); break;
+                case COMPONENTS.OpAmp: 
+                    c = new OpAmp();
+                    c.ideal = r.ideal;
+                    break;
                 case COMPONENTS.Antenna:
                     c = new Antenna();
                     c.gain = r.gain;
@@ -1188,7 +1202,7 @@ function handleLoad(event) {
                 }
                 c.x = r.x;
                 c.y = r.y;
-            } else {
+            } else if (r.partID <= 14) {
                 // IC
                 c = new IC(r.x1, r.y1);
                 c.x2 = r.x2;
