@@ -693,6 +693,10 @@ class MOSFET extends Part {
 }
 
 // ====================[ ENTRY POINT ]====================
+function preload() {
+    loadJSON("default.json", populateCircuit);
+}
+
 function setup() {
     canvas = createCanvas(windowWidth, windowHeight - WEB_TOP_MARGIN);
     canvas.position(0, WEB_TOP_MARGIN);
@@ -1130,88 +1134,91 @@ function handleLoad(event) {
     var reader = new FileReader();
     reader.onload = function(event) {
         var result = JSON.parse(event.target.result);
-
-        // repopulate the circuit from json
-        g_components = [];
-        for (var i = 0; i < result.length; i++) {
-            var r = result[i];
-            if (r == undefined && r.partID == undefined) continue;
-            if (r.partID >= COMPONENTS.length || r.partID < 0) continue;
-
-            var c;
-            if (r.partID <= 9) {    // TODO: make less hard coded comparison
-                // single port
-                switch(r.partID) {
-                case COMPONENTS.Wire:   // TODO: make this less repetitive
-                    c = new Wire(r.x1, r.y1);
-                    break;
-                case COMPONENTS.Resistor: 
-                    c = new Resistor(r.x1, r.y1);
-                    c.resistance = r.resistance;
-                    break;
-                case COMPONENTS.Capacitor: 
-                    c = new Capacitor(r.x1, r.y1);
-                    c.capacitance = r.capacitance;
-                    break;
-                case COMPONENTS.ECapacitor: 
-                    c = new ECapacitor(r.x1, r.y1);
-                    c.capacitance = r.capacitance;
-                    break;
-                case COMPONENTS.Inductor: 
-                    c = new Inductor(r.x1, r.y1);
-                    c.inductance = r.inductance;
-                    break;
-                case COMPONENTS.Diode: 
-                    c = new Diode(r.x1, r.y1);
-                    break;
-                case COMPONENTS.Oscillator: 
-                    c = new Oscillator(r.x1, r.y1);
-                    c.freq = r.freq;
-                    break;
-                case COMPONENTS.VSource: 
-                    c = new VSource(r.x1, r.y1);
-                    c.voltage = r.voltage;
-                    break;
-                case COMPONENTS.ISource: 
-                    c = new ISource(r.x1, r.y1);
-                    c.current = r.current;
-                    break;
-                case COMPONENTS.Battery: 
-                    c = new Battery(r.x1, r.y1);
-                    c.voltage = r.voltage;
-                    break;
-                }
-                c.x2 = r.x2;
-                c.y2 = r.y2;
-            } else if (r.partID <= 13) {
-                // single pin
-                switch(r.partID) {
-                case COMPONENTS.VRef:
-                    c = new VRef();
-                    c.voltage = r.voltage;
-                    break;
-                case COMPONENTS.Ground: c = new Ground(); break;
-                case COMPONENTS.OpAmp: 
-                    c = new OpAmp();
-                    c.ideal = r.ideal;
-                    break;
-                case COMPONENTS.Antenna:
-                    c = new Antenna();
-                    c.gain = r.gain;
-                    break;
-                }
-                c.x = r.x;
-                c.y = r.y;
-            } else if (r.partID <= 14) {
-                // IC
-                c = new IC(r.x1, r.y1);
-                c.x2 = r.x2;
-                c.y2 = r.y2;
-                c.label = r.label;
-            }
-            c.built = true;
-            g_components.push(c);
-        }
+        populateCircuit(result);
     }
     reader.readAsText(files.item(0));
+}
+
+function populateCircuit(result) {
+    // repopulate the circuit from json
+    g_components = [];
+    for (var i = 0; i < result.length; i++) {
+        var r = result[i];
+        if (r == undefined && r.partID == undefined) continue;
+        if (r.partID >= COMPONENTS.length || r.partID < 0) continue;
+
+        var c;
+        if (r.partID <= 9) {    // TODO: make less hard coded comparison
+            // single port
+            switch(r.partID) {
+            case COMPONENTS.Wire:   // TODO: make this less repetitive
+                c = new Wire(r.x1, r.y1);
+                break;
+            case COMPONENTS.Resistor: 
+                c = new Resistor(r.x1, r.y1);
+                c.resistance = r.resistance;
+                break;
+            case COMPONENTS.Capacitor: 
+                c = new Capacitor(r.x1, r.y1);
+                c.capacitance = r.capacitance;
+                break;
+            case COMPONENTS.ECapacitor: 
+                c = new ECapacitor(r.x1, r.y1);
+                c.capacitance = r.capacitance;
+                break;
+            case COMPONENTS.Inductor: 
+                c = new Inductor(r.x1, r.y1);
+                c.inductance = r.inductance;
+                break;
+            case COMPONENTS.Diode: 
+                c = new Diode(r.x1, r.y1);
+                break;
+            case COMPONENTS.Oscillator: 
+                c = new Oscillator(r.x1, r.y1);
+                c.freq = r.freq;
+                break;
+            case COMPONENTS.VSource: 
+                c = new VSource(r.x1, r.y1);
+                c.voltage = r.voltage;
+                break;
+            case COMPONENTS.ISource: 
+                c = new ISource(r.x1, r.y1);
+                c.current = r.current;
+                break;
+            case COMPONENTS.Battery: 
+                c = new Battery(r.x1, r.y1);
+                c.voltage = r.voltage;
+                break;
+            }
+            c.x2 = r.x2;
+            c.y2 = r.y2;
+        } else if (r.partID <= 13) {
+            // single pin
+            switch(r.partID) {
+            case COMPONENTS.VRef:
+                c = new VRef();
+                c.voltage = r.voltage;
+                break;
+            case COMPONENTS.Ground: c = new Ground(); break;
+            case COMPONENTS.OpAmp: 
+                c = new OpAmp();
+                c.ideal = r.ideal;
+                break;
+            case COMPONENTS.Antenna:
+                c = new Antenna();
+                c.gain = r.gain;
+                break;
+            }
+            c.x = r.x;
+            c.y = r.y;
+        } else if (r.partID <= 14) {
+            // IC
+            c = new IC(r.x1, r.y1);
+            c.x2 = r.x2;
+            c.y2 = r.y2;
+            c.label = r.label;
+        }
+        c.built = true;
+        g_components.push(c);
+    }
 }
