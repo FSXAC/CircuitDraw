@@ -769,7 +769,7 @@ function draw() {
 // ====================[ INPUT EVENTS ]====================
 function mousePressed() {
     // if mouse is outside of canvas, don't do anything
-    if (g_mouseX < 0 || g_mouseY < 0 || g_mouseX > width || g_mouseY > height) return;
+    if (mouseX < 0 || mouseY < 0 || mouseX > width || mouseY > height) return;
     if (!g_sketchActive) return;
 
     if (mouseButton === LEFT) {
