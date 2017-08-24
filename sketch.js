@@ -77,6 +77,7 @@ var g_components = [];  // [Part]   list of all components onscreen
 
 var g_mouseX;           // [real]   snapped mouse coordinates
 var g_mouseY;
+var g_maskedByUI = false;
 
 var g_currentMode;      // [enum]   current mode in MODES
 var g_drawingComp;      // [enum]   current component in COMPONENTS
@@ -588,6 +589,8 @@ class IC extends Part{
     drawComponent(x1, y1, x2, y2) {
         fill(50);
         rect(x1, y1, x2 - x1, y2 - y1);
+        fill(0);
+        ellipse(x1 + 15, y2 - 15, 10, 10);
 
         if (this.built) {
             for (var i = x1; i <= x2; i += GRID_SIZE) {
@@ -713,7 +716,7 @@ function setup() {
     g_drawingComp = COMPONENTS.Wire;
 
     // default mouse cursor
-    cursor(CROSS);
+    // cursor(CROSS);
 
     // setup background graphic
     var windowScaleFactor = displayWidth / windowWidth;
@@ -771,13 +774,22 @@ function draw() {
     // draw other stuff
     drawHUD();
     drawCopyright();
+
+    // if (dist(mouseX, mouseY, width/2, height/2) < 40) {
+    //     fill(50);
+    //     g_maskedByUI = true;
+    // } else {
+    //     fill(200);
+    //     g_maskedByUI = false;
+    // }
+    // ellipse(width/2, height/2, 80, 80);
 }
 
 // ====================[ INPUT EVENTS ]====================
 function mousePressed() {
     // if mouse is outside of canvas, don't do anything
     if (mouseX < 0 || mouseY < 0 || mouseX > width || mouseY > height) return;
-    if (!g_sketchActive) return;
+    if (!g_sketchActive || g_maskedByUI) return;
 
     if (mouseButton === LEFT) {
         if (g_currentMode === MODES.Drawing) {
@@ -796,7 +808,7 @@ function mousePressed() {
 }
 
 function mouseReleased() {
-    if (!g_sketchActive) return;
+    if (!g_sketchActive || g_maskedByUI) return;
 
     finishComponent();
 
@@ -932,7 +944,7 @@ function handleDelete() {
 function handleModeSwitch() {
     if (g_currentMode == MODES.Drawing) {
         g_currentMode = MODES.Editing;
-        cursor(HAND);
+        // cursor(HAND);
     }
     else if (g_currentMode == MODES.Editing) {
     // No view mode right now
@@ -941,7 +953,7 @@ function handleModeSwitch() {
     // }
     // else if (g_currentMode == MODES.Viewing) {
         g_currentMode = MODES.Drawing;
-        cursor(CROSS);
+        // cursor(CROSS);
     }
     g_textOpacity = 255;
 }
